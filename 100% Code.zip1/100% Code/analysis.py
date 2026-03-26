@@ -1,99 +1,43 @@
+import subprocess
+import sys
 import tkinter as tk
-#from tkinter import ttk, LEFT, END
-from tkinter import messagebox as ms
-import sqlite3
-from PIL import Image, ImageTk
-import re
+from tkinter import ttk
 
-##############################################+=============================================================
+from ui_theme import apply_theme
+
+
+def launch(script_name: str) -> None:
+    subprocess.call([sys.executable, script_name])
+
+
 root = tk.Tk()
-root.configure(background="white")
-# root.geometry("1300x700")
+root.title("Analysis Guidance • Diabetes Tracker")
+root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}+0+0")
+apply_theme(root)
 
+page = ttk.Frame(root, style="Root.TFrame", padding=24)
+page.pack(fill="both", expand=True)
 
-w, h = root.winfo_screenwidth(), root.winfo_screenheight()
-root.geometry("%dx%d+0+0" % (w, h))
-root.title("Master Page")
+ttk.Label(page, text="Disease Spread Analysis", style="Title.TLabel").pack(anchor="w")
+ttk.Label(page, text="Clinical interpretation support", style="Muted.TLabel").pack(anchor="w", pady=(4, 16))
 
-# 43
+card = ttk.Frame(page, style="Card.TFrame", padding=24)
+card.pack(fill="x")
 
-# ++++++++++++++++++++++++++++++++++++++++++++
-#####For background Image
-image2 = Image.open('6.webp')
-image2 = image2.resize((w,h), Image.ANTIALIAS)
+points = [
+    "Post-processing: evaluate ulcer boundaries and affected area consistency.",
+    "Quantitative metrics: track lesion distribution and percentage spread.",
+    "Clinical validation: align model outputs with medical expert findings.",
+]
 
-background_image = ImageTk.PhotoImage(image2)
+ttk.Label(card, text="Recommended Analysis Workflow", style="Heading.TLabel").pack(anchor="w")
+for p in points:
+    ttk.Label(card, text=f"• {p}", style="Body.TLabel", wraplength=980, justify="left").pack(anchor="w", pady=(8, 0))
 
-background_label = tk.Label(root, image=background_image)
-
-background_label.image = background_image
-
-background_label.place(x=0, y=0)  # , relwidth=1, relheight=1)
-
-
-
-
-label_l1 = tk.Label(root, text=" Analysis Of The Region That Might Spread The Disease.",font=("Times New Roman", 30, 'bold'),
-                    background="skyblue", fg="white", width=67, height=2)
-label_l1.place(x=0, y=0)
-
-img = Image.open('7.png')
-img = img.resize((100,70), Image.ANTIALIAS)
-logo_image = ImageTk.PhotoImage(img)
-
-logo_label = tk.Label(root, image=logo_image)
-logo_label.image = logo_image
-logo_label.place(x=40, y=10)
-
-# frame_alpr = tk.LabelFrame(root, text=" --About us-- ", width=550, height=500, bd=5, font=('times', 14, ' bold '),bg="#7CCD7C")
-# frame_alpr.grid(row=0, column=0, sticky='nw')
-# frame_alpr.place(x=550, y=200)
-
-# label_l2 = tk.Label(root, text="___ Registration Form ___",font=("Times New Roman", 30, 'bold'),
-#                     background="black", fg="white", width=67, height=2)
-# label_l2.place(x=0, y=90)
-
-
-# frame_alpr = tk.LabelFrame(root, text=" --Register-- ", width=700, height=700, bd=5, font=('times', 14, ' bold '),fg="white",bg="gray")
-# frame_alpr.grid(row=0, column=0, sticky='nw')
-# frame_alpr.place(x=0, y=98)
-
-Login_frame=tk.Frame(root)
-Login_frame.place(x=50,y=200)
-        
-logolbl=tk.Label(Login_frame,bd=0).grid(row=0,columnspan=2,pady=20)
-        
-lbluser=tk.Label(Login_frame,text=" || Analysis of Disease Spread || \n 1.Post-Processing\n After detecting ulcers, post-process the results to analyze the spread or severity of the disease.\n  Measure the size and distribution of ulcer regions within the images.\n 2.Quantitative Metrics\n Develop metrics to quantify the extent of disease spread, such as the percentage of affected area or the number of ulcers.\n 3.Clinical Validation\n Collaborate with medical professionals to validate the model's findings clinically.\n Ensure that the model's predictions align with real-world disease progression.",font=("Times new roman", 20, "bold"),bg="white").grid(row=1,column=0,padx=20,pady=10)
-
-
-
-    
-def window():
-  root.destroy()
-  
-  
-def con():
-    from subprocess import call
-    call(["python","gui main.py"])
-    root.destroy()
-
-# def about():
-#     from subprocess import call
-#     call(["python","aboutus.py"])
-#     root.destroy()
-    
-    
-# button1 = tk.Button(label_l1, text="HOME", command=con, width=8, height=1,font=('times 15 bold'),bd=0, bg="skyblue", fg="white")
-# button1.place(x=1210, y=40)
-
-# button2 = tk.Button(label_l1, text="LOGIN",command=log,width=8, height=1,font=('times 15 bold'), bd=0,bg="skyblue", fg="white")
-# button2.place(x=1310, y=40)
-
-# button4 = tk.Button(label_l1, text="EXIT", command=window, width=8, height=1,font=('times 15 bold'),bd=0,bg="skyblue", fg="white")
-# button4.place(x=1400, y=40)
-
-
-
-
+footer = ttk.Frame(page, style="Root.TFrame")
+footer.pack(fill="x", side="bottom", pady=(16, 0))
+ttk.Button(footer, text="Back to Dashboard", style="Secondary.TButton", command=lambda: [launch("master_GUI.py"), root.destroy()]).pack(side="left")
+ttk.Button(footer, text="Home", style="Secondary.TButton", command=lambda: [launch("gui main.py"), root.destroy()]).pack(side="left", padx=(10, 0))
+ttk.Button(footer, text="Exit", style="Danger.TButton", command=root.destroy).pack(side="right")
 
 root.mainloop()
