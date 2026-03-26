@@ -1,0 +1,10 @@
+Patient Diabetic Risk Report
+=============================
+Prediction: At A Risk Of Diabetic
+Confidence Score: 1.00
+
+Recommended Actions:
+- Consult a healthcare provider immediately.
+- Monitor blood sugar levels regularly.
+- Follow a balanced diet and stay active.
+- Schedule follow-up tests as advised.
