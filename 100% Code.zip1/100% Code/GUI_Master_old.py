@@ -17,7 +17,7 @@ global fn
 fn=""
 ##############################################+=============================================================
 root = tk.Tk()
-root.configure(background="seashell2")
+root.configure(background="#f4f7fb")
 root.geometry("1300x700")
 
 
@@ -44,11 +44,22 @@ background_label.place(x=250, y=1)  # , relwidth=1, relheight=1)
 
 
 
-lbl = tk.Label(root, text="Diabetic Mellitus Detection System", font=('times', 30,' bold '), width=70,height=2,bg="#B0E0E6",fg="black")
+lbl = tk.Label(root, text="Diabetes Tracker • Risk Screening", font=("Segoe UI", 24, "bold"), width=70, height=2, bg="#ffffff", fg="#0f172a")
 lbl.place(x=0, y=0)
 
 
-frame_alpr = tk.LabelFrame(root, text=" --Process-- ", width=262, height=760, bd=5, font=('times', 14, ' bold '),bg="grey")
+frame_alpr = tk.LabelFrame(
+    root,
+    text=" Workflow ",
+    width=290,
+    height=760,
+    bd=1,
+    font=("Segoe UI", 12, "bold"),
+    bg="#ffffff",
+    fg="#0f172a",
+    highlightbackground="#dbe4ef",
+    highlightthickness=1,
+)
 frame_alpr.grid(row=0, column=0, sticky='nw')
 frame_alpr.place(x=2, y=94)
 
@@ -212,7 +223,7 @@ def send_email_with_report(filepath):
 
 def update_label(str_T):
     #clear_img()
-    result_label = tk.Label(root, text=str_T, width=40, font=("bold", 25), bg='goldenrod', fg='black')
+    result_label = tk.Label(root, text=str_T, width=50, font=("Segoe UI", 14, "bold"), bg="#ecfeff", fg="#0f172a")
     result_label.place(x=300, y=450)
 # def train_model():
     
@@ -340,17 +351,40 @@ def window():
 from tkinter import messagebox as ms
 
 
-button1 = tk.Button(frame_alpr, text=" Select_Image ", command=openimage,width=15, height=1, font=('times', 15, ' bold '),bg="#B0E0E6",fg="black")
-button1.place(x=30, y=100)
+button1 = tk.Button(
+    frame_alpr,
+    text="Select Image",
+    command=openimage,
+    width=18,
+    height=1,
+    font=("Segoe UI", 11, "bold"),
+    bg="#0f766e",
+    fg="white",
+    bd=0,
+    activebackground="#0d9488",
+    activeforeground="white",
+)
+button1.place(x=34, y=110)
 
-button2 = tk.Button(frame_alpr, text="Image_preprocess", command=convert_grey, width=15, height=1, font=('times', 15, ' bold '),bg="#B0E0E6",fg="black")
-button2.place(x=30, y=200)
+button2 = tk.Button(
+    frame_alpr,
+    text="Image Preprocess",
+    command=convert_grey,
+    width=18,
+    height=1,
+    font=("Segoe UI", 11, "bold"),
+    bg="#e2e8f0",
+    fg="#0f172a",
+    bd=0,
+    activebackground="#cbd5e1",
+)
+button2.place(x=34, y=190)
 
 # # 
-button4 = tk.Button(frame_alpr, text="CNN_Prediction", command=test_model,width=15, height=1,bg="#B0E0E6",fg="black", font=('times', 15, ' bold '))
-button4.place(x=30, y=300)
-button4 = tk.Button(frame_alpr, text="Precaution", command=prec,width=15, height=1,bg="#B0E0E6",fg="black", font=('times', 15, ' bold '))
-button4.place(x=30, y=400)
+button4 = tk.Button(frame_alpr, text="CNN Prediction", command=test_model, width=18, height=1, bg="#e2e8f0", fg="#0f172a", font=("Segoe UI", 11, "bold"), bd=0, activebackground="#cbd5e1")
+button4.place(x=34, y=270)
+button4 = tk.Button(frame_alpr, text="Precaution", command=prec, width=18, height=1, bg="#e2e8f0", fg="#0f172a", font=("Segoe UI", 11, "bold"), bd=0, activebackground="#cbd5e1")
+button4.place(x=34, y=350)
 
 
 # button3 = tk.Button(frame_alpr, text="Train Model", command=train_model, width=15, height=1, font=('times', 15, ' bold '),bg="#B0E0E6",fg="black")
@@ -367,8 +401,8 @@ button4.place(x=30, y=400)
 #button5.place(x=450, y=20)
 
 
-exit = tk.Button(frame_alpr, text="Exit", command=window, width=15, height=1,bg="red", font=('times', 15, ' bold '),fg="white")
-exit.place(x=30, y=500)
+exit = tk.Button(frame_alpr, text="Exit", command=window, width=18, height=1, bg="#dc2626", font=("Segoe UI", 11, "bold"), fg="white", bd=0, activebackground="#b91c1c")
+exit.place(x=34, y=450)
 
 
 
