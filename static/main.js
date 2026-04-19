@@ -235,20 +235,23 @@ async function runPrediction() {
         const response = await fetch('/api/predict', { method: 'POST', body: formData });
         const data = await response.json();
 
-        if (data.status === 'success') {
+        if (response.ok && data.status === 'success') {
             currentResultData = data;
             document.getElementById('diagnosis-text').textContent = data.prediction;
             document.getElementById('confidence-text').textContent = `Confidence Score: ${data.confidence}%`;
             document.getElementById('confidence-bar').style.width = (parseFloat(data.confidence) * 100) + '%';
             
-            document.getElementById('prev-gray').src = data.visuals.gray;
-            document.getElementById('prev-thresh').src = data.visuals.threshold;
+            document.getElementById('prev-gray').src = data.visuals.gray + '?v=' + Date.now();
+            document.getElementById('prev-thresh').src = data.visuals.threshold + '?v=' + Date.now();
             
             updateStepper(3);
+        } else {
+            console.error('Analysis Error:', data);
+            alert(`Analysis failed: ${data.detail || 'Unknown server error'} (Status: ${response.status})`);
         }
     } catch (err) {
-        console.error(err);
-        alert('Analysis failed.');
+        console.error('Fetch Error:', err);
+        alert('Analysis failed: Could not connect to the server or process the image.');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Run CNN Analysis';

@@ -23,16 +23,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Constants
-IMAGE_SIZE = 200
-MODEL_IMAGE_SIZE = 64
-UPLOAD_DIR = "static/uploads"
+# Constants & Paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Load context
-MODEL_PATH = "model1.h5"
-LABELS_PATH = "labels.txt"
-DATABASE_PATH = "evaluation.db"
+# Load context with absolute paths
+MODEL_PATH = os.path.join(BASE_DIR, "model1.h5")
+LABELS_PATH = os.path.join(BASE_DIR, "labels.txt")
+DATABASE_PATH = os.path.join(BASE_DIR, "evaluation.db")
 
 # Database Helper
 def get_db():
@@ -218,33 +217,45 @@ async def update_profile(
     finally:
         db.close()
 
+# Config Constants
+IMAGE_SIZE = 200
+MODEL_IMAGE_SIZE = 64
+
 # Prediction Endpoints
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
     if not model:
+        print("CRITICAL: ML Model not loaded during request")
         raise HTTPException(status_code=500, detail="ML Model not loaded")
     
     file_path = os.path.join(UPLOAD_DIR, file.filename)
+    print(f"DEBUG: Processing analysis for {file.filename}")
+    
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
     try:
         # Preprocessing Steps
+        print("DEBUG: Stage 1 - Loading with OpenCV")
         img_cv = cv2.imread(file_path)
         if img_cv is None:
-            raise HTTPException(status_code=400, detail="Invalid image file")
+            print(f"ERROR: OpenCV could not read {file_path}")
+            raise HTTPException(status_code=400, detail="Invalid image file or format")
             
         # 1. Grayscale
+        print("DEBUG: Stage 2 - Grayscale conversion")
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
         gray_path = os.path.join(UPLOAD_DIR, "gray_" + file.filename)
         cv2.imwrite(gray_path, gray)
         
         # 2. Threshold
+        print("DEBUG: Stage 3 - Thresholding")
         _, threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         threshold_path = os.path.join(UPLOAD_DIR, "thresh_" + file.filename)
         cv2.imwrite(threshold_path, threshold)
         
         # 3. Model Prediction
+        print("DEBUG: Stage 4 - Model Inference")
         img = Image.open(file_path).convert("RGB").resize((MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE))
         arr = np.array(img).reshape(1, MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE, 3).astype("float32") / 255.0
         
@@ -254,6 +265,8 @@ async def predict(file: UploadFile = File(...)):
         
         class_name = class_names[index][2:].strip() if index < len(class_names) else f"Class {index}"
         diagnosis = "Not At A Risk Of Diabetic" if index == 0 else "At A Risk Of Diabetic"
+        
+        print(f"DEBUG: Inference success: {diagnosis} ({confidence:.2f})")
         
         return {
             "status": "success",
@@ -267,7 +280,8 @@ async def predict(file: UploadFile = File(...)):
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"CRITICAL ERROR in predict: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Analysis Error: {str(e)}")
 
 # PWA & Root Asset Routes
 @app.get("/manifest.json")
