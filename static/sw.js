@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diabetes-tracker-v8';
+const CACHE_NAME = 'diabetes-tracker-v9';
 const ASSETS = [
   '/',
   '/style.css',
