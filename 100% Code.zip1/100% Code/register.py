@@ -6,12 +6,13 @@ import tkinter as tk
 from tkinter import messagebox as ms
 from tkinter import ttk
 
-from ui_theme import apply_theme
+from ui_theme import apply_theme, fade_in
 
 root = tk.Tk()
 root.title("Register • Diabetes Tracker")
 root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}+0+0")
 apply_theme(root)
+fade_in(root)
 
 fullname = tk.StringVar()
 address = tk.StringVar()
@@ -92,11 +93,11 @@ def insert() -> None:
 page = ttk.Frame(root, style="Root.TFrame", padding=24)
 page.pack(fill="both", expand=True)
 
-ttk.Label(page, text="Create your account", style="Title.TLabel").pack(anchor="w")
-ttk.Label(page, text="Register for secure diabetes screening workflow access", style="Muted.TLabel").pack(anchor="w", pady=(4, 16))
+card = ttk.Frame(page, style="Card.TFrame", padding=30)
+card.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.5)
 
-card = ttk.Frame(page, style="Card.TFrame", padding=24)
-card.pack(fill="x")
+ttk.Label(card, text="Create account", style="Heading.TLabel").grid(row=0, column=0, columnspan=2, sticky="w")
+ttk.Label(card, text="Join the platform to access diabetic risk dashboards.", style="Muted.TLabel").grid(row=1, column=0, columnspan=2, sticky="w", pady=(4, 16))
 
 fields = [
     ("Full Name", fullname),
@@ -107,25 +108,29 @@ fields = [
 ]
 
 for i, (label, var) in enumerate(fields):
-    ttk.Label(card, text=label, style="Body.TLabel").grid(row=i * 2, column=0, sticky="w", pady=(0, 4))
-    ttk.Entry(card, textvariable=var, width=42).grid(row=i * 2 + 1, column=0, sticky="ew", pady=(0, 10))
+    row_index = i * 2 + 2
+    ttk.Label(card, text=label, style="Body.TLabel").grid(row=row_index, column=0, sticky="w", pady=(0, 4))
+    ttk.Entry(card, textvariable=var).grid(row=row_index + 1, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
-base_row = len(fields) * 2
+base_row = len(fields) * 2 + 2
 
 ttk.Label(card, text="Password", style="Body.TLabel").grid(row=base_row, column=0, sticky="w", pady=(0, 4))
-ttk.Entry(card, textvariable=password, show="*", width=42).grid(row=base_row + 1, column=0, sticky="ew", pady=(0, 10))
+ttk.Entry(card, textvariable=password, show="*").grid(row=base_row + 1, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
 ttk.Label(card, text="Confirm Password", style="Body.TLabel").grid(row=base_row + 2, column=0, sticky="w", pady=(0, 4))
-ttk.Entry(card, textvariable=confirm_password, show="*", width=42).grid(row=base_row + 3, column=0, sticky="ew", pady=(0, 16))
+ttk.Entry(card, textvariable=confirm_password, show="*").grid(row=base_row + 3, column=0, columnspan=2, sticky="ew", pady=(0, 18))
 
 actions = ttk.Frame(card, style="Card.TFrame")
-actions.grid(row=base_row + 4, column=0, sticky="w")
+actions.grid(row=base_row + 4, column=0, columnspan=2, sticky="w")
 ttk.Button(actions, text="Register", style="Primary.TButton", command=insert).pack(side="left", padx=(0, 10))
 ttk.Button(actions, text="Back to Login", style="Secondary.TButton", command=lambda: launch("login.py")).pack(side="left")
 
+card.columnconfigure(0, weight=1)
+card.columnconfigure(1, weight=1)
+
 footer = ttk.Frame(page, style="Root.TFrame")
-footer.pack(fill="x", side="bottom", pady=(16, 0))
-ttk.Button(footer, text="Home", style="Secondary.TButton", command=lambda: launch("gui main.py")).pack(side="left")
+footer.pack(fill="x", side="bottom")
+ttk.Button(footer, text="Home", style="Ghost.TButton", command=lambda: launch("gui main.py")).pack(side="left")
 ttk.Button(footer, text="Exit", style="Danger.TButton", command=root.destroy).pack(side="right")
 
 root.mainloop()
