@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Tracker • Advanced Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="icon" type="image/png" href="/static/icon.png">
+    <link rel="shortcut icon" type="image/png" href="/static/icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <!-- Font Awesome and Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Auth Section -->
+    <div id="auth-section" class="auth-wrapper" style="flex-direction: column;">
+        <div class="brand-header text-center mb-4">
+            <img src="/static/icon.png" alt="Logo" style="width: 80px; height: 80px; margin-bottom: 1rem; border-radius: 12px;">
+            <h1 style="color: #1e3a8a; margin-bottom: 0;">Diabetes Tracker</h1>
+            <p style="color: #64748b; font-weight: 500;">Clinical Screenings & Patient Support</p>
+        </div>
+        <div class="auth-card">
+            <h1 id="auth-title">Welcome back</h1>
+            <p id="auth-subtitle" class="mb-4">Sign in to your health dashboard</p>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="input-field" required>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    <button type="button" onclick="toggleAuth()" class="btn btn-secondary">Create Account</button>
+                </div>
+            </form>
+
+            <form id="register-form" class="hidden">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group"><label>Full Name</label><input type="text" name="fullname" class="input-field" required></div>
+                    <div class="form-group"><label>Age</label><input type="number" name="age" class="input-field"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group"><label>Email</label><input type="email" name="email" class="input-field"></div>
+                    <div class="form-group"><label>Phone</label><input type="text" name="phone" class="input-field"></div>
+                </div>
+                <div class="form-group"><label>Username</label><input type="text" name="username" class="input-field" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" class="input-field" required></div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                    <button type="button" onclick="toggleAuth()" class="btn btn-secondary">Back to Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- App Section -->
+    <div id="app-section" class="app-layout hidden">
+        <header class="app-header">
+            <div class="header-left d-flex align-items-center gap-3">
+                <img src="/static/icon.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px; margin-right: 30px;">
+                <span class="app-logo-text">Diabetes Tracker</span>
+            </div>
+            <div class="header-right">
+                <button class="profile-btn" onclick="showView('profile')">
+                    <span id="user-display-name">User</span>
+                    <i class="fa-solid fa-circle-user"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="app-container">
+            <aside class="sidebar">
+                <nav>
+                    <a href="#" class="nav-link active" onclick="showView('prediction')"><i class="fa-solid fa-microscope"></i> Prediction</a>
+                    <a href="#" class="nav-link" onclick="showView('analysis')"><i class="fa-solid fa-chart-line"></i> Analysis</a>
+                    <a href="#" class="nav-link" onclick="showView('remedy')"><i class="fa-solid fa-heart-pulse"></i> Remedy</a>
+                </nav>
+                <div class="sidebar-footer">
+                    <button onclick="logout()" class="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <!-- Prediction View -->
+                <div id="prediction-view">
+                    <div class="stepper-wrapper">
+                        <div class="stepper">
+                            <div class="step" id="step-1">
+                                <div class="step-circle">1</div>
+                                <div class="step-label">Upload</div>
+                            </div>
+                            <div class="stepper-line" id="line-1"></div>
+                            <div class="step" id="step-2">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">Process</div>
+                            </div>
+                            <div class="stepper-line" id="line-2"></div>
+                            <div class="step" id="step-3">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Result</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="step-content-1" class="step-content">
+                        <div class="card text-center py-5">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
+                            <h2>Upload Medical Image</h2>
+                            <p class="mb-4">Standardize clinical image for screening analysis.</p>
+                            <input type="file" id="image-upload" accept="image/*" class="hidden">
+                            <button onclick="document.getElementById('image-upload').click()" class="btn btn-primary">Choose File</button>
+                            <p id="file-name" class="mt-3 text-muted">No file selected</p>
+                        </div>
+                    </div>
+
+                    <div id="step-content-2" class="step-content hidden">
+                        <div class="pipeline-grid mb-4">
+                            <div class="card">
+                                <p class="mb-3 font-weight-bold">Original</p>
+                                <div class="image-preview"><img id="prev-orig" src=""></div>
+                            </div>
+                            <div class="card">
+                                <p class="mb-3 font-weight-bold">Grayscale</p>
+                                <div class="image-preview"><img id="prev-gray" src=""></div>
+                            </div>
+                            <div class="card">
+                                <p class="mb-3 font-weight-bold">Threshold</p>
+                                <div class="image-preview"><img id="prev-thresh" src=""></div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button id="predict-btn" onclick="runPrediction()" class="btn btn-primary btn-lg">Run CNN Analysis</button>
+                        </div>
+                    </div>
+
+                    <div id="step-content-3" class="step-content hidden">
+                        <div id="result-card" class="card result-card">
+                            <div class="result-header">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <h2>Analysis Complete</h2>
+                            </div>
+                            <div class="result-body">
+                                <h1 id="diagnosis-text" class="diagnosis">Result Loading...</h1>
+                                <div class="confidence-meter">
+                                    <span id="confidence-text">Confidence: 0%</span>
+                                    <div class="meter-bg"><div id="confidence-bar" class="meter-fill"></div></div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-4" style="display: flex; justify-content: center; gap: 1rem;">
+                                <button id="save-result-btn" onclick="saveCurrentResult()" class="btn btn-primary"><i class="fa-solid fa-bookmark"></i> Save Result</button>
+                                <button onclick="resetStepper()" class="btn btn-secondary">New Analysis</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis View -->
+                <div id="analysis-view" class="hidden">
+                    <header class="mb-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1>Clinical Insights</h1>
+                            <p>Track your health trends and historical screening data.</p>
+                        </div>
+                        <button onclick="shareGraph()" class="btn btn-secondary btn-sm"><i class="fa-solid fa-share-nodes"></i> Share Report</button>
+                    </header>
+                    
+                    <div id="trend-banner" class="card mb-4 trend-banner hidden">
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="trend-icon-circle" style="margin-right: 40px;">
+                                <i id="trend-icon" class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                            <div>
+                                <h2 id="trend-status">Calculating Trends...</h2>
+                                <p id="trend-advice" class="text-muted">Analyzing your screening history for clinical patterns.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <h3 class="mb-4"><i class="fa-solid fa-chart-line"></i> Health Score Trend</h3>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="healthChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="analysis-empty-state" class="card py-5 text-center">
+                        <i class="fa-solid fa-folder-open mb-3" style="font-size: 2rem; color: var(--border);"></i>
+                        <p>No historical data available yet. Save results to see your trends.</p>
+                    </div>
+
+                    <div id="analysis-history-list" class="history-list"></div>
+                </div>
+
+                <!-- Remedy View -->
+                <div id="remedy-view" class="hidden">
+                    <header class="mb-4">
+                        <h1>Health Recommendations</h1>
+                        <p>Suggested precautions and diet plans based on your profile.</p>
+                    </header>
+                    <div class="remedy-list">
+                        <div class="card mb-4">
+                            <h3 class="remedy-title"><i class="fa-solid fa-kit-medical"></i> Precautions</h3>
+                            <ul class="check-list remedy-text">
+                                <li>Regularly monitor blood sugar levels.</li>
+                                <li>Take medications or insulin as prescribed.</li>
+                                <li>Maintain proper hydration.</li>
+                                <li>Practice good foot care.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3 class="remedy-title"><i class="fa-solid fa-utensils"></i> Diet Plan</h3>
+                            <ul class="check-list remedy-text">
+                                <li><strong>Breakfast</strong>: Whole grain toast & eggs.</li>
+                                <li><strong>Lunch</strong>: Grilled chicken & veggies.</li>
+                                <li><strong>Snack</strong>: Handful of nuts.</li>
+                                <li><strong>Dinner</strong>: Baked fish & salad.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile View -->
+                <div id="profile-view" class="hidden">
+                    <header class="mb-4 d-flex align-items-center justify-content-between">
+                        <div>
+                            <h1>User Profile</h1>
+                            <p>Manage your account settings and clinical information.</p>
+                        </div>
+                        <button onclick="showView('prediction')" class="btn btn-secondary"><i class="fa-solid fa-chevron-left"></i> Back</button>
+                    </header>
+                    
+                    <form id="profile-form">
+                        <div class="card profile-card">
+                            <div class="profile-grid">
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" name="fullname" id="prof-fullname" class="input-field" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Age</label>
+                                    <input type="text" name="age" id="prof-age" class="input-field" readonly>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label>Email Address</label>
+                                    <input type="email" name="email" id="prof-email" class="input-field" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="text" name="phone" id="prof-phone" class="input-field" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Username (Fixed)</label>
+                                    <input type="text" id="prof-username" class="input-field" readonly disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <div class="password-toggle-wrapper">
+                                        <input type="password" name="password" id="prof-password" class="input-field" readonly>
+                                        <button type="button" class="eye-btn" onclick="togglePasswordVisibility('prof-password')">
+                                            <i id="prof-password-icon" class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="profile-actions mt-4">
+                                <button type="button" id="edit-profile-btn" onclick="toggleProfileEdit()" class="btn btn-secondary">Edit Profile</button>
+                                <button type="submit" id="save-profile-btn" class="btn btn-primary hidden">Save Changes</button>
+                                <button type="button" onclick="logout()" class="btn btn-danger-outline" style="margin-left: auto;">Logout</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+
+        <!-- Bottom Navigation (Mobile Only) -->
+        <nav id="mobile-nav" class="bottom-nav">
+            <a href="#" class="nav-link active" onclick="showView('prediction')">
+                <i class="fa-solid fa-microscope"></i>
+                <span>Prediction</span>
+            </a>
+            <a href="#" class="nav-link" onclick="showView('analysis')">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Analysis</span>
+            </a>
+            <a href="#" class="nav-link" onclick="showView('remedy')">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Remedy</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="/main.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+</body>
+</html>

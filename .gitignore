@@ -1,0 +1,27 @@
+# Definitive GitHub-Friendly Ignore List
+
+# Folders to completely ignore
+DiabetesProject/app/venv/
+DiabetesProject/app/__pycache__/
+DiabetesProject/app/Dataset DM/
+DiabetesProject/app/training set/
+DiabetesProject/app/testing set/
+
+# File type exclusions
+*.zip
+*.rar
+*.7z
+*.tmp
+*.log
+desktop.ini
+
+# Specific Large Files that block Push
+**/_pywrap_tensorflow_common.dll
+**/libclang.dll
+**/cv2.pyd
+
+# Files to KEEP for deployment
+!DiabetesProject/app/model1.h5
+!DiabetesProject/app/model2.h5
+!DiabetesProject/app/static/icon.png
+!diabetes-test.png
