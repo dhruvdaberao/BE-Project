@@ -1,0 +1,23 @@
+Patient Diabetic Risk Report
+=============================
+Prediction: At A Risk Of Diabetic
+Confidence Score: 0.99
+
+Precautions:
+1. Regularly monitor blood sugar levels.
+2. Take medications or insulin as prescribed.
+3. Maintain proper hydration.
+4. Practice good foot care.
+5. Avoid smoking and alcohol consumption.
+
+Sample Diet Plan:
+- Breakfast: Whole grain toast, boiled eggs, and a small fruit.
+- Lunch: Grilled chicken, steamed vegetables, and quinoa.
+- Snack: Handful of nuts or yogurt.
+- Dinner: Baked fish, salad, and a small serving of brown rice.
+- Avoid sugary drinks and processed foods.
+
+Recommended Actions:
+- Consult a healthcare provider immediately.
+- Schedule a follow-up appointment for further testing.
+- Engage in regular physical activity (e.g., walking, yoga).
