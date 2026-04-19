@@ -1,5 +1,17 @@
-let currentUser = null;
+let currentUser = JSON.parse(localStorage.getItem('diabetes_user')) || null;
 let healthChart = null;
+
+// Initialize Session on Load
+document.addEventListener('DOMContentLoaded', () => {
+    if (currentUser) {
+        document.getElementById('user-display-name').textContent = currentUser.fullname.split(' ')[0];
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('app-section').classList.remove('hidden');
+        
+        const lastView = localStorage.getItem('diabetes_view') || 'prediction';
+        showView(lastView);
+    }
+});
 
 // UI State Management
 function toggleAuth() {
@@ -21,6 +33,7 @@ function toggleAuth() {
 }
 
 function showView(viewName) {
+    localStorage.setItem('diabetes_view', viewName);
     ['prediction', 'analysis', 'remedy', 'profile'].forEach(v => {
         document.getElementById(`${v}-view`).classList.add('hidden');
     });
@@ -55,6 +68,7 @@ document.getElementById('login-form').onsubmit = async (e) => {
         
         if (response.ok) {
             currentUser = data.user;
+            localStorage.setItem('diabetes_user', JSON.stringify(currentUser));
             document.getElementById('user-display-name').textContent = currentUser.fullname.split(' ')[0];
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
@@ -88,6 +102,8 @@ document.getElementById('register-form').onsubmit = async (e) => {
 
 function logout() {
     currentUser = null;
+    localStorage.removeItem('diabetes_user');
+    localStorage.removeItem('diabetes_view');
     document.getElementById('app-section').classList.add('hidden');
     document.getElementById('auth-section').classList.remove('hidden');
 }

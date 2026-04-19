@@ -87,73 +87,117 @@
 
             <main class="main-content">
                 <!-- Prediction View -->
-                <div id="prediction-view">
-                    <div class="stepper-wrapper">
-                        <div class="stepper">
-                            <div class="step" id="step-1">
-                                <div class="step-circle">1</div>
-                                <div class="step-label">Upload</div>
-                            </div>
-                            <div class="stepper-line" id="line-1"></div>
-                            <div class="step" id="step-2">
-                                <div class="step-circle">2</div>
-                                <div class="step-label">Process</div>
-                            </div>
-                            <div class="stepper-line" id="line-2"></div>
-                            <div class="step" id="step-3">
-                                <div class="step-circle">3</div>
-                                <div class="step-label">Result</div>
-                            </div>
-                        </div>
-                    </div>
+                <div id="prediction-view" class="hidden">
+                    <div class="content-container">
+                        <header class="mb-4">
+                            <h1>Screening Prediction</h1>
+                            <p>Upload thermal footprints for advanced diabetic risk assessment.</p>
+                        </header>
 
-                    <div id="step-content-1" class="step-content">
-                        <div class="card text-center py-5">
-                            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
-                            <h2>Upload Medical Image</h2>
-                            <p class="mb-4">Standardize clinical image for screening analysis.</p>
-                            <input type="file" id="image-upload" accept="image/*" class="hidden">
-                            <button onclick="document.getElementById('image-upload').click()" class="btn btn-primary">Choose File</button>
-                            <p id="file-name" class="mt-3 text-muted">No file selected</p>
-                        </div>
-                    </div>
+                        <img src="/static/prediction.png?v=5" alt="Prediction illustration" class="prediction-hero">
 
-                    <div id="step-content-2" class="step-content hidden">
-                        <div class="pipeline-grid mb-4">
-                            <div class="card">
-                                <p class="mb-3 font-weight-bold">Original</p>
-                                <div class="image-preview"><img id="prev-orig" src=""></div>
-                            </div>
-                            <div class="card">
-                                <p class="mb-3 font-weight-bold">Grayscale</p>
-                                <div class="image-preview"><img id="prev-gray" src=""></div>
-                            </div>
-                            <div class="card">
-                                <p class="mb-3 font-weight-bold">Threshold</p>
-                                <div class="image-preview"><img id="prev-thresh" src=""></div>
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <button id="predict-btn" onclick="runPrediction()" class="btn btn-primary btn-lg">Run CNN Analysis</button>
-                        </div>
-                    </div>
-
-                    <div id="step-content-3" class="step-content hidden">
-                        <div id="result-card" class="card result-card">
-                            <div class="result-header">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <h2>Analysis Complete</h2>
-                            </div>
-                            <div class="result-body">
-                                <h1 id="diagnosis-text" class="diagnosis">Result Loading...</h1>
-                                <div class="confidence-meter">
-                                    <span id="confidence-text">Confidence: 0%</span>
-                                    <div class="meter-bg"><div id="confidence-bar" class="meter-fill"></div></div>
+                        <div class="stepper-wrapper">
+                            <div class="stepper">
+                                <div class="step" id="step-1">
+                                    <div class="step-circle">1</div>
+                                    <div class="step-label">Upload</div>
+                                </div>
+                                <div class="stepper-line" id="line-1"></div>
+                                <div class="step" id="step-2">
+                                    <div class="step-circle">2</div>
+                                    <div class="step-label">Process</div>
+                                </div>
+                                <div class="stepper-line" id="line-2"></div>
+                                <div class="step" id="step-3">
+                                    <div class="step-circle">3</div>
+                                    <div class="step-label">Result</div>
                                 </div>
                             </div>
-                            <div class="text-center mt-4" style="display: flex; justify-content: center; gap: 1rem;">
-                                <button id="save-result-btn" onclick="saveCurrentResult()" class="btn btn-primary"><i class="fa-solid fa-bookmark"></i> Save Result</button>
-                                <button onclick="resetStepper()" class="btn btn-secondary">New Analysis</button>
+                        </div>
+
+                        <div id="step-content-1" class="step-content">
+                            <div class="card text-center py-5">
+                                <i class="fa-solid fa-shoe-prints" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
+                                <h2>Upload Thermal Footprint</h2>
+                                <p class="mb-4">Standardize clinical thermal image for screening analysis.</p>
+                                <input type="file" id="image-upload" accept="image/*" class="hidden">
+                                <button onclick="document.getElementById('image-upload').click()" class="btn btn-primary">Choose Image</button>
+                                <p id="file-name" class="mt-3 text-muted">No file selected</p>
+                            </div>
+                        </div>
+
+                        <div id="step-content-2" class="step-content hidden">
+                            <div class="pipeline-grid mb-4">
+                                <div class="card">
+                                    <p class="mb-3 font-weight-bold">Original</p>
+                                    <div class="image-preview"><img id="prev-orig" src=""></div>
+                                </div>
+                                <div class="card">
+                                    <p class="mb-3 font-weight-bold">Grayscale</p>
+                                    <div class="image-preview"><img id="prev-gray" src=""></div>
+                                </div>
+                                <div class="card">
+                                    <p class="mb-3 font-weight-bold">Threshold</p>
+                                    <div class="image-preview"><img id="prev-thresh" src=""></div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button id="predict-btn" onclick="runPrediction()" class="btn btn-primary btn-lg">Run CNN Analysis</button>
+                            </div>
+                        </div>
+
+                        <div id="step-content-3" class="step-content hidden">
+                            <div id="result-card" class="card result-card">
+                                <div class="result-header">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <h2>Analysis Complete</h2>
+                                </div>
+                                <div class="result-body">
+                                    <h1 id="diagnosis-text" class="diagnosis">Result Loading...</h1>
+                                    <div class="confidence-meter">
+                                        <span id="confidence-text">Confidence: 0%</span>
+                                        <div class="meter-bg"><div id="confidence-bar" class="meter-fill"></div></div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-4" style="display: flex; justify-content: center; gap: 1rem;">
+                                    <button id="save-result-btn" onclick="saveCurrentResult()" class="btn btn-primary"><i class="fa-solid fa-bookmark"></i> Save Result</button>
+                                    <button onclick="resetStepper()" class="btn btn-secondary">New Analysis</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info & Benefits -->
+                        <div class="info-card">
+                            <h3 class="mb-3"><i class="fa-solid fa-circle-info text-primary"></i> How it Works</h3>
+                            <p class="mb-4">Our advanced CNN model analyzes thermal patterns to detect early signs of diabetic complications.</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                                <div>
+                                    <h4 class="text-primary-dark mb-2">Step-by-Step</h4>
+                                    <ul class="remedy-text" style="padding-left: 1.2rem;">
+                                        <li>Upload Footprint: Provide a clear thermal image.</li>
+                                        <li>Processing: Image undergoes grayscale & thresholding.</li>
+                                        <li>AI Analysis: Neural network checks for risk patterns.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="text-primary-dark mb-2">Understanding Results</h4>
+                                    <ul class="remedy-text" style="padding-left: 1.2rem;">
+                                        <li><strong>90%+</strong>: Highly confident assessment.</li>
+                                        <li><strong>70-90%</strong>: Moderate confidence, review recommended.</li>
+                                        <li><strong>Below 70%</strong>: Low confidence, please re-upload.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="benefit-grid">
+                            <div class="benefit-card">
+                                <h4><i class="fa-solid fa-bolt"></i> Fast Screening</h4>
+                                <p>Get results in under 5 seconds utilizing our high-performance clinical cloud pipeline.</p>
+                            </div>
+                            <div class="benefit-card">
+                                <h4><i class="fa-solid fa-shield-heart"></i> Non-Invasive</h4>
+                                <p>Thermal imaging provides a pain-free way to monitor diabetic foot health from home.</p>
                             </div>
                         </div>
                     </div>
@@ -161,120 +205,128 @@
 
                 <!-- Analysis View -->
                 <div id="analysis-view" class="hidden">
-                    <header class="mb-4 d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="content-container">
+                        <header class="mb-5">
                             <h1>Clinical Insights</h1>
-                            <p>Track your health trends and historical screening data.</p>
-                        </div>
-                        <button onclick="shareGraph()" class="btn btn-secondary btn-sm"><i class="fa-solid fa-share-nodes"></i> Share Report</button>
-                    </header>
-                    
-                    <div id="trend-banner" class="card mb-4 trend-banner hidden">
-                        <div class="d-flex align-items-center gap-4">
-                            <div class="trend-icon-circle" style="margin: 30px;">
-                                <i id="trend-icon" class="fa-solid fa-arrow-trend-up"></i>
+                            <p class="mb-3">Track your health trends and historical screening data.</p>
+                            <img src="/static/analysis.png?v=7" alt="Analysis illustration" class="prediction-hero">
+                            <button onclick="shareGraph()" class="btn btn-secondary btn-sm"><i class="fa-solid fa-share-nodes"></i> Share Report</button>
+                        </header>
+                        
+                        <div id="trend-banner" class="card mb-4 trend-banner hidden">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="trend-icon-circle" style="margin: 30px;">
+                                    <i id="trend-icon" class="fa-solid fa-arrow-trend-up"></i>
+                                </div>
+                                <div>
+                                    <h2 id="trend-status">Calculating Trends...</h2>
+                                    <p id="trend-advice" class="text-muted">Analyzing your screening history for clinical patterns.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 id="trend-status">Calculating Trends...</h2>
-                                <p id="trend-advice" class="text-muted">Analyzing your screening history for clinical patterns.</p>
+                        </div>
+
+                        <div class="card mb-4">
+                            <h3 class="mb-4"><i class="fa-solid fa-chart-line"></i> Health Score Trend</h3>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="healthChart"></canvas>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="card mb-4">
-                        <h3 class="mb-4"><i class="fa-solid fa-chart-line"></i> Health Score Trend</h3>
-                        <div style="height: 300px; position: relative;">
-                            <canvas id="healthChart"></canvas>
+                        <div id="analysis-empty-state" class="card py-5 text-center">
+                            <i class="fa-solid fa-folder-open mb-3" style="font-size: 2rem; color: var(--border);"></i>
+                            <p>No historical data available yet. Save results to see your trends.</p>
                         </div>
-                    </div>
 
-                    <div id="analysis-empty-state" class="card py-5 text-center">
-                        <i class="fa-solid fa-folder-open mb-3" style="font-size: 2rem; color: var(--border);"></i>
-                        <p>No historical data available yet. Save results to see your trends.</p>
+                        <div id="analysis-history-list" class="history-list"></div>
                     </div>
-
-                    <div id="analysis-history-list" class="history-list"></div>
                 </div>
 
                 <!-- Remedy View -->
                 <div id="remedy-view" class="hidden">
-                    <header class="mb-4">
-                        <h1>Health Recommendations</h1>
-                        <p>Suggested precautions and diet plans based on your profile.</p>
-                    </header>
-                    <div class="remedy-list">
-                        <div class="card mb-4">
-                            <h3 class="remedy-title"><i class="fa-solid fa-kit-medical"></i> Precautions</h3>
-                            <ul class="check-list remedy-text">
-                                <li>Regularly monitor blood sugar levels.</li>
-                                <li>Take medications or insulin as prescribed.</li>
-                                <li>Maintain proper hydration.</li>
-                                <li>Practice good foot care.</li>
-                            </ul>
+                    <div class="content-container">
+                        <header class="mb-4">
+                            <h1>Health Recommendations</h1>
+                            <p>Suggested precautions and diet plans based on your profile.</p>
+                        </header>
+                        <div class="text-center mb-5">
+                            <img src="/static/remedy.png?v=5" alt="Health Remedy" style="max-height: 250px; width: auto;">
                         </div>
-                        <div class="card">
-                            <h3 class="remedy-title"><i class="fa-solid fa-utensils"></i> Diet Plan</h3>
-                            <ul class="check-list remedy-text">
-                                <li><strong>Breakfast</strong>: Whole grain toast & eggs.</li>
-                                <li><strong>Lunch</strong>: Grilled chicken & veggies.</li>
-                                <li><strong>Snack</strong>: Handful of nuts.</li>
-                                <li><strong>Dinner</strong>: Baked fish & salad.</li>
-                            </ul>
+                        <div class="remedy-list">
+                            <div class="card mb-4">
+                                <h3 class="remedy-title"><i class="fa-solid fa-kit-medical"></i> Precautions</h3>
+                                <ul class="check-list remedy-text">
+                                    <li>Regularly monitor blood sugar levels.</li>
+                                    <li>Take medications or insulin as prescribed.</li>
+                                    <li>Maintain proper hydration.</li>
+                                    <li>Practice good foot care.</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <h3 class="remedy-title"><i class="fa-solid fa-utensils"></i> Diet Plan</h3>
+                                <ul class="check-list remedy-text">
+                                    <li><strong>Breakfast</strong>: Whole grain toast & eggs.</li>
+                                    <li><strong>Lunch</strong>: Grilled chicken & veggies.</li>
+                                    <li><strong>Snack</strong>: Handful of nuts.</li>
+                                    <li><strong>Dinner</strong>: Baked fish & salad.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Profile View -->
                 <div id="profile-view" class="hidden">
-                    <header class="mb-4 d-flex align-items-center justify-content-between">
-                        <div>
-                            <h1>User Profile</h1>
-                            <p>Manage your account settings and clinical information.</p>
-                        </div>
-                        <button onclick="showView('prediction')" class="btn btn-secondary"><i class="fa-solid fa-chevron-left"></i> Back</button>
-                    </header>
-                    
-                    <form id="profile-form">
-                        <div class="card profile-card">
-                            <div class="profile-grid">
-                                <div class="form-group">
-                                    <label>Full Name</label>
-                                    <input type="text" name="fullname" id="prof-fullname" class="input-field" readonly>
-                                </div>
-                                <div class="form-group">
-                                    <label>Age</label>
-                                    <input type="text" name="age" id="prof-age" class="input-field" readonly>
-                                </div>
-                                <div class="form-group" style="grid-column: span 2;">
-                                    <label>Email Address</label>
-                                    <input type="email" name="email" id="prof-email" class="input-field" readonly>
-                                </div>
-                                <div class="form-group">
-                                    <label>Phone Number</label>
-                                    <input type="text" name="phone" id="prof-phone" class="input-field" readonly>
-                                </div>
-                                <div class="form-group">
-                                    <label>Username (Fixed)</label>
-                                    <input type="text" id="prof-username" class="input-field" readonly disabled>
-                                </div>
-                                <div class="form-group">
-                                    <label>Password</label>
-                                    <div class="password-toggle-wrapper">
-                                        <input type="password" name="password" id="prof-password" class="input-field" readonly>
-                                        <button type="button" class="eye-btn" onclick="togglePasswordVisibility('prof-password')">
-                                            <i id="prof-password-icon" class="fa-solid fa-eye"></i>
-                                        </button>
+                    <div class="content-container">
+                        <header class="mb-4 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h1>User Profile</h1>
+                                <p>Manage your account settings and clinical information.</p>
+                            </div>
+                            <button onclick="showView('prediction')" class="btn btn-secondary"><i class="fa-solid fa-chevron-left"></i> Back</button>
+                        </header>
+                        
+                        <form id="profile-form">
+                            <div class="card profile-card">
+                                <div class="profile-grid">
+                                    <div class="form-group">
+                                        <label>Full Name</label>
+                                        <input type="text" name="fullname" id="prof-fullname" class="input-field" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Age</label>
+                                        <input type="text" name="age" id="prof-age" class="input-field" readonly>
+                                    </div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>Email Address</label>
+                                        <input type="email" name="email" id="prof-email" class="input-field" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone Number</label>
+                                        <input type="text" name="phone" id="prof-phone" class="input-field" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Username (Fixed)</label>
+                                        <input type="text" id="prof-username" class="input-field" readonly disabled>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password</label>
+                                        <div class="password-toggle-wrapper">
+                                            <input type="password" name="password" id="prof-password" class="input-field" readonly>
+                                            <button type="button" class="eye-btn" onclick="togglePasswordVisibility('prof-password')">
+                                                <i id="prof-password-icon" class="fa-solid fa-eye"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+                                
+                                <div class="profile-actions mt-4">
+                                    <button type="button" id="edit-profile-btn" onclick="toggleProfileEdit()" class="btn btn-secondary">Edit Profile</button>
+                                    <button type="submit" id="save-profile-btn" class="btn btn-primary hidden">Save Changes</button>
+                                    <button type="button" onclick="logout()" class="btn btn-danger-outline" style="margin-left: auto;">Logout</button>
+                                </div>
                             </div>
-                            
-                            <div class="profile-actions mt-4">
-                                <button type="button" id="edit-profile-btn" onclick="toggleProfileEdit()" class="btn btn-secondary">Edit Profile</button>
-                                <button type="submit" id="save-profile-btn" class="btn btn-primary hidden">Save Changes</button>
-                                <button type="button" onclick="logout()" class="btn btn-danger-outline" style="margin-left: auto;">Logout</button>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </main>
         </div>
