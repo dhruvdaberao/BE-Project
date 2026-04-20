@@ -7,13 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 try:
-    import tflite_runtime.interpreter as tflite
+    import onnxruntime as ort
 except ImportError:
-    # Fallback for environments where tflite-runtime isn't installed yet
-    try:
-        import tensorflow.lite as tflite
-    except ImportError:
-        tflite = None
+    ort = None
 from PIL import Image
 import shutil
 import time
@@ -37,7 +33,7 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Load context with absolute paths
-MODEL_PATH = os.path.join(BASE_DIR, "model1.tflite")
+MODEL_PATH = os.path.join(BASE_DIR, "model1.onnx")
 LABELS_PATH = os.path.join(BASE_DIR, "labels.txt")
 DATABASE_PATH = os.path.join(BASE_DIR, "evaluation.db")
 
@@ -81,22 +77,24 @@ def init_db():
 
 init_db()
 
-# Initialize TFLite Interpreter
-interpreter = None
-input_details = None
-output_details = None
+# Initialize ONNX Session
+ort_session = None
+model_load_error = None
 
 try:
-    if os.path.exists(MODEL_PATH):
-        interpreter = tflite.Interpreter(model_path=MODEL_PATH)
-        interpreter.allocate_tensors()
-        input_details = interpreter.get_input_details()
-        output_details = interpreter.get_output_details()
-        print(f"SUCCESS: TFLite Model loaded from {MODEL_PATH}")
+    if not ort:
+        model_load_error = "ONNX Runtime library not found."
+        print(f"ERROR: {model_load_error}")
+    elif os.path.exists(MODEL_PATH):
+        # Using CPU for maximum compatibility on Render free tier
+        ort_session = ort.InferenceSession(MODEL_PATH, providers=['CPUExecutionProvider'])
+        print(f"SUCCESS: ONNX Model loaded from {MODEL_PATH}")
     else:
-        print(f"ERROR: Model file not found at {MODEL_PATH}")
+        model_load_error = f"Model file missing at {MODEL_PATH}"
+        print(f"ERROR: {model_load_error}")
 except Exception as e:
-    print(f"Error loading TFLite model: {e}")
+    model_load_error = str(e)
+    print(f"CRITICAL: Error loading ONNX model: {e}")
 
 class_names = []
 if os.path.exists(LABELS_PATH):
@@ -242,9 +240,12 @@ MODEL_IMAGE_SIZE = 64
 # Prediction Endpoints
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
-    if not interpreter:
-        print("CRITICAL: ML Model (TFLite) not loaded during request")
-        raise HTTPException(status_code=500, detail="ML Model not loaded")
+    if not ort_session:
+        print(f"CRITICAL: ML Model (ONNX) not available: {model_load_error}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"ML Model not loaded: {model_load_error or 'Unknown initialization failure'}"
+        )
     
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     print(f"DEBUG: Processing analysis for {file.filename}")
@@ -273,10 +274,8 @@ async def predict(file: UploadFile = File(...)):
         cv2.imwrite(threshold_path, threshold)
         
         # 3. Model Prediction
-        print("DEBUG: Stage 4 - TFLite Inference")
-        if interpreter is None:
-            raise HTTPException(status_code=500, detail="ML Model not initialized")
-            
+        print("DEBUG: Stage 4 - ONNX Inference")
+        
         # Pre-inference memory cleanup
         gc.collect()
         
@@ -284,11 +283,11 @@ async def predict(file: UploadFile = File(...)):
         arr = np.array(img).reshape(1, MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE, 3).astype("float32") / 255.0
         
         try:
-            interpreter.set_tensor(input_details[0]['index'], arr)
-            interpreter.invoke()
-            prediction = interpreter.get_tensor(output_details[0]['index'])
+            # ONNX dynamic input lookup
+            input_name = ort_session.get_inputs()[0].name
+            prediction = ort_session.run(None, {input_name: arr})[0]
         except Exception as predict_err:
-            print(f"ERROR during TFLite inference: {predict_err}")
+            print(f"ERROR during ONNX inference: {predict_err}")
             raise HTTPException(status_code=500, detail=f"Model Inference Failed: {str(predict_err)}")
 
         index = int(np.argmax(prediction))
