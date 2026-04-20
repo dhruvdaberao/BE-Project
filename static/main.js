@@ -233,7 +233,20 @@ async function runPrediction() {
 
     try {
         const response = await fetch('/api/predict', { method: 'POST', body: formData });
-        const data = await response.json();
+        
+        // Check for common server-side crash status codes (like 502 Bad Gateway)
+        if (response.status === 502 || response.status === 504) {
+            throw new Error(`Cloud server crashed or timed out (Error ${response.status}). This usually happens when the free tier runs out of memory (RAM).`);
+        }
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (jsonErr) {
+            const rawBody = await response.text();
+            console.error('Non-JSON Response:', rawBody);
+            throw new Error('Server returned an invalid response. The server may have run out of memory.');
+        }
 
         if (response.ok && data.status === 'success') {
             currentResultData = data;
@@ -251,7 +264,7 @@ async function runPrediction() {
         }
     } catch (err) {
         console.error('Fetch Error:', err);
-        alert('Analysis failed: Could not connect to the server or process the image.');
+        alert(`Analysis failed: ${err.message || 'Could not connect to the server'}`);
     } finally {
         btn.disabled = false;
         btn.textContent = 'Run CNN Analysis';
@@ -389,9 +402,21 @@ function renderChart(history) {
             maintainAspectRatio: false,
             scales: {
                 y: { min: -0.2, max: 1.2, ticks: { display: false }, grid: { display: false } },
-                x: { grid: { display: false } }
+                x: { 
+                    grid: { display: false },
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 6,
+                        maxRotation: 45,
+                        minRotation: 0,
+                        font: { size: 10 }
+                    }
+                }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: { backgroundColor: '#1e3a8a' }
+            }
         }
     });
 }

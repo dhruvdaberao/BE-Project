@@ -6,5 +6,4 @@ tensorflow-cpu
 opencv-python-headless
 pillow
 numpy
-scikit-learn
-matplotlib
+# Removing scikit-learn and matplotlib to save memory on hosted (Render) environment

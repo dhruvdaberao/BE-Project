@@ -4,6 +4,9 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+os.environ["MALLOC_TRIM_THRESHOLD_"] = "100000"
 
 import sqlite3
 import cv2
@@ -14,9 +17,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from keras.models import load_model
 from PIL import Image
-import shutil
 import time
 from datetime import datetime
+import gc
+from keras import backend as K
 
 app = FastAPI(title="Diabetes Tracker API")
 
@@ -262,10 +266,19 @@ async def predict(file: UploadFile = File(...)):
         
         # 3. Model Prediction
         print("DEBUG: Stage 4 - Model Inference")
+        # Pre-inference memory cleanup
+        K.clear_session()
+        gc.collect()
+        
         img = Image.open(file_path).convert("RGB").resize((MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE))
         arr = np.array(img).reshape(1, MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE, 3).astype("float32") / 255.0
         
-        prediction = model.predict(arr, verbose=0)
+        try:
+            prediction = model.predict(arr, verbose=0)
+        except Exception as predict_err:
+            print(f"ERROR during model.predict: {predict_err}")
+            raise HTTPException(status_code=500, detail=f"Model Inference Failed: {str(predict_err)}")
+
         index = int(np.argmax(prediction))
         confidence = float(prediction[0][index])
         
@@ -273,6 +286,10 @@ async def predict(file: UploadFile = File(...)):
         diagnosis = "Not At A Risk Of Diabetic" if index == 0 else "At A Risk Of Diabetic"
         
         print(f"DEBUG: Inference success: {diagnosis} ({confidence:.2f})")
+        
+        # Post-inference memory cleanup
+        K.clear_session()
+        gc.collect()
         
         return {
             "status": "success",
