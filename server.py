@@ -251,20 +251,17 @@ async def predict(file: UploadFile = File(...)):
             detail=f"ML Model not loaded: {model_load_error or 'Unknown initialization failure'}"
         )
     
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
-    print(f"DEBUG: Processing analysis for {file.filename}")
+    # Sanitize filename (remove spaces and special chars)
+    clean_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in file.filename])
+    file_path = os.path.join(UPLOAD_DIR, clean_name)
+    print(f"DEBUG: Processing analysis for {clean_name}")
     
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
     try:
-        # Preprocessing Steps
-        print("DEBUG: Stage 1 - Loading with OpenCV")
-        # Sanitize filename (remove spaces and special chars)
-        clean_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in file.filename])
-        file_path = os.path.join(UPLOAD_DIR, clean_name)
-        
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
+            
+        # Preprocessing Steps
+        print("DEBUG: Stage 1 - Loading with OpenCV")
             
         # Read and Process
         img_cv = cv2.imread(file_path)
