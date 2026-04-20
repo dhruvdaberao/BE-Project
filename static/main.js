@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastView = localStorage.getItem('diabetes_view') || 'prediction';
         showView(lastView);
     }
+    
+    // Close modal on outside click
+    window.onclick = (e) => {
+        const modal = document.getElementById('auth-modal');
+        if (e.target === modal) closeAuthModal();
+    };
 });
 
 // UI State Management
@@ -106,6 +112,22 @@ function logout() {
     localStorage.removeItem('diabetes_view');
     document.getElementById('app-section').classList.add('hidden');
     document.getElementById('auth-section').classList.remove('hidden');
+}
+
+// Auth Modal Functions
+function openAuthModal() {
+    document.getElementById('auth-modal').classList.remove('hidden');
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').classList.add('hidden');
+}
+
+function selectAuthOption(type) {
+    const input = document.querySelector('#login-form input[name="username"]');
+    input.placeholder = `Enter your ${type}`;
+    input.focus();
+    closeAuthModal();
 }
 
 // User Profile Management

@@ -156,7 +156,11 @@ async def delete_analysis(id: int):
 async def login(username: str = Form(...), password: str = Form(...)):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM registration WHERE username = ? AND password = ?", (username, password))
+    # Support login via Username, Email, or Phone Number
+    cursor.execute("""
+        SELECT * FROM registration 
+        WHERE (username = ? OR Email = ? OR Phoneno = ?) AND password = ?
+    """, (username, username, username, password))
     user = cursor.fetchone()
     db.close()
     
