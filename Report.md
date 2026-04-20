@@ -52,11 +52,27 @@ The heart of the diagnostic engine is a **Convolutional Neural Network (CNN)** i
 *   **Challenge**: The app was tethered to a browser tab, making it feel less like a "medical tool."
 *   **Fix**: Implemented a **Service Worker (sw.js)** and **Web App Manifest**. The platform is now "Installable" and appears as a native app on iOS, Android, and Windows.
 
+### **E. Extreme Mobile Responsiveness**
+*   **Challenge**: The login card was touching screen edges, and complex components like the "Health Trend Banner" and "Analysis Stepper" were overflowing on mobile devices.
+*   **Fix**: Implemented a "Mobile-First" CSS overhaul using precise media queries. Added horizontal padding to the auth wrapper, reduced card padding for small screens, and refactored the trend banner to stack vertically on mobile. Optimized the Chart.js configuration to auto-skip and rotate X-axis labels to prevent overlap on phone screens.
+
+### **F. Cloud Hosting Stability (OOM Resolution)**
+*   **Challenge**: The application suffered from "502 Bad Gateway" and "Out of Memory" crashes on the Render.com hosted environment due to TensorFlow's heavy memory footprint.
+*   **Fix**: 
+    - **Memory Management**: Injected `gc.collect()` and `K.clear_session()` into the prediction pipeline to release RAM immediately after every inference.
+    - **Library Pruning**: Removed heavy, unused dependencies like `scikit-learn` and `matplotlib` from the production environment.
+    - **Gunicorn Optimization**: Configured a 120-second timeout and worker preloading in the `Procfile` to handle large model loads without service interruption.
+
+### **G. Premium Visual Identity**
+*   **Challenge**: Stylized shoe-print icons lacked the clinical precision required for a professional medical app.
+*   **Fix**: Generated and integrated a custom **minimalistic bare-footprint icon** with visible toes. Applied transparency effects and `mix-blend-mode: multiply` to ensure perfect integration with the UI layout, and enlarged the icons for better touch-target accessibility on mobile.
+
 ## 6. Clinical Impact
-By moving from a localized ZIP file to a cloud-hosted PWA, the Diabetes Tracker is now:
+By moving from a localized ZIP file to an optimized, cloud-hosted PWA, the Diabetes Tracker is now:
 *   **Always-On**: Accessible by clinicians anywhere, anytime.
-*   **Performant**: Uses high-performance inference to provide results in seconds.
+*   **Mobile-Ready**: Perfectly functional on tablets and smartphones during active patient screenings.
+*   **Resilient**: Capable of running heavy ML models on low-resource (Free Tier) cloud environments without crashing.
 *   **Actionable**: Includes a "Trend Analysis" system that calculates if a patient's health is improving or worsening based on their screening history.
 
 ---
-**Report compiled by Dhruv Daberao.**
+**Report compiled by Dhruv Daberao (Project Lead).**

@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from keras.models import load_model
 from PIL import Image
+import shutil
 import time
 from datetime import datetime
 import gc

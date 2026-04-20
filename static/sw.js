@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diabetes-tracker-v10';
+const CACHE_NAME = 'diabetes-tracker-v13';
 const ASSETS = [
   '/',
   '/style.css',
@@ -6,7 +6,8 @@ const ASSETS = [
   '/static/icon.png',
   '/static/remedy.png',
   '/static/prediction.png',
-  '/static/analysis.png'
+  '/static/analysis.png',
+  '/static/bare_foot.png'
 ];
 
 self.addEventListener('install', (e) => {
