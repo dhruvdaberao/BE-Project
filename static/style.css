@@ -659,6 +659,11 @@ body {
     margin-bottom: 0.5rem;
 }
 
+@media (max-width: 768px) {
+    .content-container header { margin-bottom: 1.5rem; }
+    .content-container header h1 { font-size: 1.75rem; }
+}
+
 .benefit-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -687,12 +692,32 @@ body {
     margin-top: 2.5rem;
 }
 
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .info-card { padding: 1.5rem; margin-top: 1.5rem; }
+    .info-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
 .prediction-hero {
     display: block;
     max-height: 280px;
-    width: auto;
+    width: 100%;
+    max-width: 500px;
     margin: 0 auto 2.5rem;
     border-radius: var(--radius);
+    object-fit: contain;
+}
+
+@media (max-width: 768px) {
+    .prediction-hero { 
+        max-height: 180px; 
+        margin-bottom: 1.5rem;
+    }
 }
 
 .text-primary-dark {
