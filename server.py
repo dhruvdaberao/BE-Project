@@ -241,6 +241,32 @@ async def update_profile(
 IMAGE_SIZE = 200
 MODEL_IMAGE_SIZE = 64
 
+def is_thermal_image(img_cv):
+    """
+    Detects if an image matches the color distribution of medical thermal palettes.
+    Ironbow/Jet palettes use specific hues (Purples, Oranges, Yellows).
+    """
+    if img_cv is None: return False
+    hsv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+    
+    # Thermal palettes (Ironbow) heavily use hues in 0-40 (Red/Yellow) 
+    # and 140-180 (Magenta/Purple) ranges.
+    thermal_mask = cv2.inRange(h, 0, 40) | cv2.inRange(h, 140, 180)
+    thermal_percentage = (cv2.countNonZero(thermal_mask) / (h.shape[0] * h.shape[1])) * 100
+    
+    # Regular photos of food/fruit usually have high-entropy hue distributions.
+    avg_sat = np.mean(s)
+    std_val = np.std(v)
+    
+    print(f"DEBUG: Thermal Stats - Perc: {thermal_percentage:.1f}%, Sat: {avg_sat:.1f}, StdV: {std_val:.1f}")
+    
+    # Heuristic: Valid medical prints have high saturation and specific thermal hues
+    # or high intensity variance.
+    if thermal_percentage < 30 and avg_sat < 80:
+        return False
+    return True
+
 # Prediction Endpoints
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
@@ -251,33 +277,44 @@ async def predict(file: UploadFile = File(...)):
             detail=f"ML Model not loaded: {model_load_error or 'Unknown initialization failure'}"
         )
     
-    # Sanitize filename (remove spaces and special chars)
+    # Generate unique filename with timestamp to prevent browser caching (stale images)
+    timestamp = int(time.time())
     clean_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in file.filename])
-    file_path = os.path.join(UPLOAD_DIR, clean_name)
-    print(f"DEBUG: Processing analysis for {clean_name}")
+    unique_name = f"{timestamp}_{clean_name}"
+    file_path = os.path.join(UPLOAD_DIR, unique_name)
+    
+    print(f"DEBUG: Processing analysis for {unique_name}")
     
     try:
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        # Preprocessing Steps
-        print("DEBUG: Stage 1 - Loading with OpenCV")
-            
-        # Read and Process
+        # 1. Load and Validate
         img_cv = cv2.imread(file_path)
         if img_cv is None:
             raise HTTPException(status_code=400, detail="Invalid image file or format")
             
-        # 1. Grayscale
+        # Clinical Heuristic Validation
+        if not is_thermal_image(img_cv):
+            print(f"REJECTED: Non-thermal image detected for {unique_name}")
+            if os.path.exists(file_path): os.remove(file_path)
+            raise HTTPException(
+                status_code=400, 
+                detail="Invalid Image: Please enter a medical thermal footprint image. Normal photos are not supported."
+            )
+
+        # 2. Grayscale
         print("DEBUG: Stage 2 - Grayscale conversion")
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-        gray_path = os.path.join(UPLOAD_DIR, "gray_" + clean_name)
+        gray_name = f"gray_{unique_name}"
+        gray_path = os.path.join(UPLOAD_DIR, gray_name)
         cv2.imwrite(gray_path, gray)
         
-        # 2. Threshold
+        # 3. Threshold
         print("DEBUG: Stage 3 - Thresholding")
         _, threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        threshold_path = os.path.join(UPLOAD_DIR, "thresh_" + clean_name)
+        threshold_name = f"thresh_{unique_name}"
+        threshold_path = os.path.join(UPLOAD_DIR, threshold_name)
         cv2.imwrite(threshold_path, threshold)
         
         # 3. Model Prediction
@@ -314,9 +351,9 @@ async def predict(file: UploadFile = File(...)):
             "class": class_name,
             "confidence": f"{confidence:.2f}",
             "visuals": {
-                "original": f"/uploads/{clean_name}",
-                "gray": f"/uploads/gray_{clean_name}",
-                "threshold": f"/uploads/thresh_{clean_name}"
+                "original": f"/uploads/{unique_name}",
+                "gray": f"/uploads/gray_{unique_name}",
+                "threshold": f"/uploads/thresh_{unique_name}"
             }
         }
     except Exception as e:
