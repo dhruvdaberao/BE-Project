@@ -1,4 +1,10 @@
 import os
+
+# Set environment variables for memory/GPU optimization BEFORE importing TensorFlow/Keras
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 import sqlite3
 import cv2
 import numpy as np
