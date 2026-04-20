@@ -1,13 +1,4 @@
 import os
-
-# Set environment variables for memory/GPU optimization BEFORE importing TensorFlow/Keras
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-os.environ["TF_NUM_INTEROP_THREADS"] = "1"
-os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
-os.environ["MALLOC_TRIM_THRESHOLD_"] = "100000"
-
 import sqlite3
 import cv2
 import numpy as np
@@ -15,13 +6,19 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
-from keras.models import load_model
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    # Fallback for environments where tflite-runtime isn't installed yet
+    try:
+        import tensorflow.lite as tflite
+    except ImportError:
+        tflite = None
 from PIL import Image
 import shutil
 import time
 from datetime import datetime
 import gc
-from keras import backend as K
 
 app = FastAPI(title="Diabetes Tracker API")
 
@@ -40,7 +37,7 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Load context with absolute paths
-MODEL_PATH = os.path.join(BASE_DIR, "model1.h5")
+MODEL_PATH = os.path.join(BASE_DIR, "model1.tflite")
 LABELS_PATH = os.path.join(BASE_DIR, "labels.txt")
 DATABASE_PATH = os.path.join(BASE_DIR, "evaluation.db")
 
@@ -84,12 +81,22 @@ def init_db():
 
 init_db()
 
-# Initialize model
-model = None
+# Initialize TFLite Interpreter
+interpreter = None
+input_details = None
+output_details = None
+
 try:
-    model = load_model(MODEL_PATH, compile=False)
+    if os.path.exists(MODEL_PATH):
+        interpreter = tflite.Interpreter(model_path=MODEL_PATH)
+        interpreter.allocate_tensors()
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        print(f"SUCCESS: TFLite Model loaded from {MODEL_PATH}")
+    else:
+        print(f"ERROR: Model file not found at {MODEL_PATH}")
 except Exception as e:
-    print(f"Error loading model: {e}")
+    print(f"Error loading TFLite model: {e}")
 
 class_names = []
 if os.path.exists(LABELS_PATH):
@@ -235,8 +242,8 @@ MODEL_IMAGE_SIZE = 64
 # Prediction Endpoints
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
-    if not model:
-        print("CRITICAL: ML Model not loaded during request")
+    if not interpreter:
+        print("CRITICAL: ML Model (TFLite) not loaded during request")
         raise HTTPException(status_code=500, detail="ML Model not loaded")
     
     file_path = os.path.join(UPLOAD_DIR, file.filename)
@@ -266,18 +273,22 @@ async def predict(file: UploadFile = File(...)):
         cv2.imwrite(threshold_path, threshold)
         
         # 3. Model Prediction
-        print("DEBUG: Stage 4 - Model Inference")
+        print("DEBUG: Stage 4 - TFLite Inference")
+        if interpreter is None:
+            raise HTTPException(status_code=500, detail="ML Model not initialized")
+            
         # Pre-inference memory cleanup
-        K.clear_session()
         gc.collect()
         
         img = Image.open(file_path).convert("RGB").resize((MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE))
         arr = np.array(img).reshape(1, MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE, 3).astype("float32") / 255.0
         
         try:
-            prediction = model.predict(arr, verbose=0)
+            interpreter.set_tensor(input_details[0]['index'], arr)
+            interpreter.invoke()
+            prediction = interpreter.get_tensor(output_details[0]['index'])
         except Exception as predict_err:
-            print(f"ERROR during model.predict: {predict_err}")
+            print(f"ERROR during TFLite inference: {predict_err}")
             raise HTTPException(status_code=500, detail=f"Model Inference Failed: {str(predict_err)}")
 
         index = int(np.argmax(prediction))
@@ -289,7 +300,6 @@ async def predict(file: UploadFile = File(...)):
         print(f"DEBUG: Inference success: {diagnosis} ({confidence:.2f})")
         
         # Post-inference memory cleanup
-        K.clear_session()
         gc.collect()
         
         return {

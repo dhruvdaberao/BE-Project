@@ -2,7 +2,7 @@ fastapi
 uvicorn
 gunicorn
 python-multipart
-tensorflow-cpu
+tflite-runtime
 opencv-python-headless
 pillow
 numpy
