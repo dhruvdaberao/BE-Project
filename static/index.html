@@ -11,6 +11,7 @@
     <!-- Font Awesome and Chart.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <!-- Auth Section -->
@@ -210,10 +211,11 @@
                             <h1>Clinical Insights</h1>
                             <p class="mb-3">Track your health trends and historical screening data.</p>
                             <img src="/static/analysis.png?v=7" alt="Analysis illustration" class="prediction-hero">
-                            <button onclick="shareGraph()" class="btn btn-secondary btn-sm"><i class="fa-solid fa-share-nodes"></i> Share Report</button>
+                            <button onclick="downloadPDF()" class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> Download Clinical Report</button>
                         </header>
                         
-                        <div id="trend-banner" class="card mb-4 trend-banner hidden">
+                        <div id="analysis-report-content">
+                            <div id="trend-banner" class="card mb-4 trend-banner hidden">
                             <div class="d-flex align-items-center gap-4">
                                 <div class="trend-icon-circle" style="margin: 30px;">
                                     <i id="trend-icon" class="fa-solid fa-arrow-trend-up"></i>
@@ -237,7 +239,8 @@
                             <p>No historical data available yet. Save results to see your trends.</p>
                         </div>
 
-                        <div id="analysis-history-list" class="history-list"></div>
+                            <div id="analysis-history-list" class="history-list"></div>
+                        </div>
                     </div>
                 </div>
 

@@ -254,8 +254,18 @@ async function runPrediction() {
             document.getElementById('confidence-text').textContent = `Confidence Score: ${data.confidence}%`;
             document.getElementById('confidence-bar').style.width = (parseFloat(data.confidence) * 100) + '%';
             
-            document.getElementById('prev-gray').src = data.visuals.gray + '?v=' + Date.now();
-            document.getElementById('prev-thresh').src = data.visuals.threshold + '?v=' + Date.now();
+            const grayImg = document.getElementById('prev-gray');
+            const threshImg = document.getElementById('prev-thresh');
+            
+            // Set sources with cache-busting
+            const timestamp = Date.now();
+            grayImg.src = data.visuals.gray + '?v=' + timestamp;
+            threshImg.src = data.visuals.threshold + '?v=' + timestamp;
+            
+            // Safety: Handle potential load failures
+            const fallback = (el) => { el.src = ''; el.alt = 'Analysis Image Not Ready'; };
+            grayImg.onerror = () => fallback(grayImg);
+            threshImg.onerror = () => fallback(threshImg);
             
             updateStepper(3);
         } else {
@@ -421,65 +431,33 @@ function renderChart(history) {
     });
 }
 
-function shareGraph() {
-    if (!healthChart) return;
+function downloadPDF() {
+    if (!currentUser) return;
     
-    // Create high-res report canvas
-    const reportCanvas = document.createElement('canvas');
-    const ctx = reportCanvas.getContext('2d');
-    const chartCanvas = document.getElementById('healthChart');
-    
-    reportCanvas.width = 800;
-    reportCanvas.height = 600;
-    
-    // Draw Background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, reportCanvas.width, reportCanvas.height);
-    
-    // Header
-    ctx.fillStyle = '#1e3a8a';
-    ctx.font = 'bold 24px Poppins sans-serif';
-    ctx.fillText('Diabetes Tracker • Clinical Report', 40, 50);
-    
-    ctx.fillStyle = '#64748b';
-    ctx.font = '16px Poppins sans-serif';
-    ctx.fillText(`Patient: ${currentUser ? currentUser.fullname : 'Guest'}`, 40, 80);
-    ctx.fillText(`Date: ${new Date().toLocaleDateString()}`, 40, 105);
-    
-    // Trend Status
-    const statusText = document.getElementById('trend-status').textContent;
-    const adviceText = document.getElementById('trend-advice').textContent;
-    
-    ctx.fillStyle = statusText.includes('Improving') ? '#22c55e' : '#ef4444';
-    ctx.font = 'bold 20px Poppins sans-serif';
-    ctx.fillText(statusText, 40, 160);
-    
-    ctx.fillStyle = '#1e293b';
-    ctx.font = '14px Poppins sans-serif';
-    // Multi-line advice printing
-    const words = adviceText.split(' ');
-    let line = '';
-    let y = 190;
-    for(let n = 0; n < words.length; n++) {
-        let testLine = line + words[n] + ' ';
-        if (testLine.length > 90) {
-            ctx.fillText(line, 40, y);
-            line = words[n] + ' ';
-            y += 20;
-        } else {
-            line = testLine;
-        }
-    }
-    ctx.fillText(line, 40, y);
-    
-    // Draw Chart
-    ctx.drawImage(chartCanvas, 40, 260, 720, 300);
-    
-    const url = reportCanvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `HealthReport_${currentUser.username}_${new Date().getTime()}.png`;
-    link.click();
+    const element = document.getElementById('analysis-report-content');
+    const opt = {
+        margin: [10, 10],
+        filename: `ClinicalReport_${currentUser.username}_${new Date().getTime()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Show a loading state
+    const btn = document.querySelector('button[onclick="downloadPDF()"]');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...';
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }).catch(err => {
+        console.error('PDF Generation Error:', err);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert('Failed to generate PDF. Please try again.');
+    });
 }
 
 async function deleteHistory(id) {

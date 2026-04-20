@@ -252,25 +252,31 @@ async def predict(file: UploadFile = File(...)):
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    
     try:
         # Preprocessing Steps
         print("DEBUG: Stage 1 - Loading with OpenCV")
+        # Sanitize filename (remove spaces and special chars)
+        clean_name = "".join([c if c.isalnum() or c in "._-" else "_" for c in file.filename])
+        file_path = os.path.join(UPLOAD_DIR, clean_name)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Read and Process
         img_cv = cv2.imread(file_path)
         if img_cv is None:
-            print(f"ERROR: OpenCV could not read {file_path}")
             raise HTTPException(status_code=400, detail="Invalid image file or format")
             
         # 1. Grayscale
         print("DEBUG: Stage 2 - Grayscale conversion")
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-        gray_path = os.path.join(UPLOAD_DIR, "gray_" + file.filename)
+        gray_path = os.path.join(UPLOAD_DIR, "gray_" + clean_name)
         cv2.imwrite(gray_path, gray)
         
         # 2. Threshold
         print("DEBUG: Stage 3 - Thresholding")
         _, threshold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        threshold_path = os.path.join(UPLOAD_DIR, "thresh_" + file.filename)
+        threshold_path = os.path.join(UPLOAD_DIR, "thresh_" + clean_name)
         cv2.imwrite(threshold_path, threshold)
         
         # 3. Model Prediction
@@ -307,9 +313,9 @@ async def predict(file: UploadFile = File(...)):
             "class": class_name,
             "confidence": f"{confidence:.2f}",
             "visuals": {
-                "original": f"/uploads/{file.filename}",
-                "gray": f"/uploads/gray_{file.filename}",
-                "threshold": f"/uploads/thresh_{file.filename}"
+                "original": f"/uploads/{clean_name}",
+                "gray": f"/uploads/gray_{clean_name}",
+                "threshold": f"/uploads/thresh_{clean_name}"
             }
         }
     except Exception as e:
