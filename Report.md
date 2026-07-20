@@ -53,8 +53,8 @@ The project employs a decoupled, production-grade architecture divided into four
 |  FastAPI (Python 3.10+) • Asynchronous ASGI (Uvicorn/Gunicorn)        |
 |  Multi-Mode Auth (Username/Email/Phone) • CORS & Static Mounts        |
 +-----------------------------------------------------------------------+
-                │                                       │
-                ▼                                       ▼
+                 │                                       │
+                 ▼                                       ▼
 +-------------------------------+       +-------------------------------+
 |     INTELLIGENCE LAYER        |       |      PERSISTENCE LAYER        |
 |  ONNX Runtime (CPU Provider)  |       |  SQLite3 (evaluation.db)      |
@@ -90,7 +90,7 @@ The project employs a decoupled, production-grade architecture divided into four
 
 ### 2.5 Database & Storage Layer
 * **Database Engine**: **SQLite3** (`evaluation.db`).
-* **Why Embedded SQLite?**: Unlike external server-based relational engines (MySQL/PostgreSQL) that introduce network latency, database connection pooling limits, and external hosting costs, SQLite stores the entire ACID-compliant database as a portable file inside the workspace. It guarantees zero-configuration deployment on serverless platforms.
+* **Why Embedded SQLite?**: SQLite stores the entire ACID-compliant database as a portable file inside the workspace. It guarantees zero-configuration deployment on serverless platforms.
 * **Schema Design**:
   * **`registration` Table**: `Fullname`, `address`, `username`, `Email`, `Phoneno`, `Gender`, `age`, `password`.
   * **`analysis_history` Table**: `id`, `username`, `prediction`, `confidence`, `image_path`, `date`, `day`, `time`.
@@ -168,27 +168,27 @@ When a patient or medical professional submits a screening scan, the system exec
 
 ```
 [Step 1: Image Upload via Web/PWA Dashboard]
-                   │
-                   ▼
+                    │
+                    ▼
 [Step 2: Timestamp Sanitization & HSV Heuristic Filter Check]
-                   ├───────────────────────────────────────┐ (If Non-Thermal Photo)
-                   ▼ (If Valid Thermal Scan)               ▼
+                    ├───────────────────────────────────────┐ (If Non-Thermal Photo)
+                    ▼ (If Valid Thermal Scan)               ▼
 [Step 3: Multi-Stage OpenCV Preprocessing Engine]    [HTTP 400 Reject Error]
   ├─> Save Original Sanitized Scan
   ├─> Grayscale Conversion (cv2.cvtColor)
   └─> Otsu's Inverse Thresholding (cv2.threshold)
-                   │
-                   ▼
+                    │
+                    ▼
 [Step 4: ONNX Runtime Inference Pass]
   ├─> Resize matrix to (1, 64, 64, 3) float32
   ├─> Execute CPU forward inference pass
   └─> Compute Softmax Confidence & Diagnosis
-                   │
-                   ▼
+                    │
+                    ▼
 [Step 5: Database Persistence & History Logging]
   └─> Write transaction to SQLite evaluation.db
-                   │
-                   ▼
+                    │
+                    ▼
 [Step 6: UI Presentation & PDF Report Export]
   └─> Render interactive multi-visual cards & generate PDF
 ```
@@ -241,11 +241,9 @@ During the evolution of this project from a local prototype to a production clou
 
 ---
 
-## 7. EXTERNAL VIVA EXAMINER Q&A GUIDE (20 COMMON DEFENSE QUESTIONS)
+## 7. EXTERNAL VIVA EXAMINER Q&A GUIDE (45 COMPREHENSIVE QUESTIONS & ANSWERS)
 
-Below is an exhaustive defense preparation guide covering technical questions external examiners frequently ask during B.E. final viva presentations:
-
-### Section A: Machine Learning & Deep Learning
+### Section A: Machine Learning & Deep Learning (Q1 - Q10)
 
 #### Q1: Why did you choose a Convolutional Neural Network (CNN) over traditional ML algorithms like Random Forest or SVM?
 **Answer:** Plantar thermal images contain complex spatial pixel relationships, localized temperature gradients, and non-linear boundary shapes. Traditional algorithms like SVM or Random Forest require manual feature extraction (such as hand-crafting statistical texture or color features), which lose critical spatial context. CNNs apply 2D spatial convolution kernels (`Convolution2D`) that automatically learn hierarchical feature representations—from basic thermal boundaries in early layers to localized ulcer hotspots in deep layers.
@@ -265,73 +263,202 @@ In preliminary medical diagnostic screening, a **False Negative** (telling a dia
 #### Q5: What activation functions did you use and why?
 **Answer:** We used **ReLU (Rectified Linear Unit)** in hidden convolutional and dense layers because it prevents the vanishing gradient problem and accelerates training convergence by outputting zero for negative input values. For the final output layer, we used **Softmax**, which exponentiates and normalizes raw logits into a probability distribution summing to $1.0$ across our two mutually exclusive classes (`Normal` vs. `Diabetic Risk`).
 
----
+#### Q6: Why did you use Stochastic Gradient Descent (SGD) instead of Adam optimizer?
+**Answer:** While Adam converges faster, it is highly prone to overshooting local minima and overfitting small, specialized datasets. Stochastic Gradient Descent (SGD) with a moderate learning rate ($\alpha = 0.01$) acts as a natural regularizer. It converges more slowly but generalizes better to unseen clinical images by maintaining stable weight update trajectories.
 
-### Section B: Image Processing & Computer Vision
+#### Q7: Explain Categorical Crossentropy loss function.
+**Answer:** Categorical Crossentropy measures the performance of a classification model whose output is a probability value between 0 and 1. The loss increases as the predicted probability diverges from the actual label. Mathematically, it is defined as:
+$$\mathcal{L} = -\sum_{i=1}^{C} y_i \log(\hat{y}_i)$$
+where $y_i$ is the ground-truth binary indicator and $\hat{y}_i$ is the predicted probability for class $i$ out of $C$ classes.
 
-#### Q6: How does your system automatically differentiate between a medical infrared thermal image and a regular photograph?
-**Answer:** In `server.py`, our `is_thermal_image()` function converts the uploaded RGB image into HSV (Hue, Saturation, Value) color space. Clinical infrared cameras using standard Ironbow or Jet color palettes concentrate pixel hues heavily in specific bands: **0–40° (Reds/Oranges/Yellows)** indicating high temperatures, and **140–180° (Magentas/Purples)** indicating cool boundaries. Regular photographs exhibit high-entropy, random hue distributions across the entire spectrum and lower average saturation. If an image has `< 30%` thermal hue pixels or low saturation, our API rejects it immediately with an HTTP 400 error.
+#### Q8: How did you select the batch size of 32 and 50 epochs?
+**Answer:** These parameters were determined empirically through hyperparameter tuning. A batch size of 32 provided the best balance between gradient estimate stability and memory footprint. Training beyond 50 epochs led to validation loss divergence, signaling overfitting, whereas training for fewer than 50 epochs left the model underfitted (lower training accuracy).
 
-#### Q7: Why do you perform Grayscale conversion and Otsu’s Inverse Binary Thresholding during preprocessing?
-**Answer:** 
-* **Grayscale Conversion**: Eliminates false color artifacts and maps the image to a single intensity channel representing purely thermal radiance.
-* **Otsu’s Thresholding (`cv2.THRESH_OTSU`)**: Automatically calculates the optimal bimodal histogram threshold separation value without hardcoding magic numbers. By combining it with inverse binary thresholding (`THRESH_BINARY_INV`), we segment and isolate the hottest localized plantar lesions as crisp foreground regions against background foot tissue for visual clinical inspection.
+#### Q9: What is the purpose of image normalization (dividing by 255)?
+**Answer:** Dividing raw pixel values ($0\text{ to }255$) by $255.0$ scales the inputs to a range of $[0.0, 1.0]$. Normalizing inputs ensures that the gradients during backpropagation remain stable, prevents exploding gradients, and accelerates learning convergence since features are on a uniform scale.
 
-#### Q8: Why resize images to `64 x 64` pixels before feeding them to the CNN?
-**Answer:** Resizing standardizes variable camera resolutions into a uniform spatial tensor `(64, 64, 3)`. A `64 x 64` resolution preserves sufficient spatial thermal gradient resolution to detect focal ulcers while keeping the mathematical parameter count of the dense layers low enough to execute rapid inference on CPU cloud environments without memory exhaustion.
-
----
-
-### Section C: Backend Engineering & Cloud Architecture
-
-#### Q9: Why did you migrate the model from legacy Keras/TensorFlow (`.h5`) to ONNX Runtime (`.onnx`)?
-**Answer:** TensorFlow is a massive training framework that allocates large pools of memory during runtime initialization (often exceeding 500MB RAM at startup). When deployed on lightweight cloud platforms (like Render’s 512MB free/starter tier), TensorFlow causes constant Out-Of-Memory (OOM) server crashes. **ONNX (Open Neural Network Exchange)** is a streamlined, framework-agnostic inference engine. Running our graph via `onnxruntime` CPU execution reduced server memory consumption by over **70%** and cut prediction latency to under 80 milliseconds.
-
-#### Q10: Why did you choose FastAPI over Flask or Django for the server backend?
-**Answer:** FastAPI is built on modern Python ASGI (Asynchronous Server Gateway Interface) standards using Uvicorn, allowing non-blocking concurrent request processing (`async def`). Unlike Flask (WSGI synchronous blocking) or Django (heavy monolith), FastAPI provides automatic Pydantic request validation, native JSON serialization, and automatic interactive Swagger documentation (`/docs`), making it ideal for high-throughput AI microservices.
-
-#### Q11: Why did you choose embedded SQLite (`evaluation.db`) instead of a standalone server database like MySQL or MongoDB?
-**Answer:** SQLite is a serverless, zero-configuration relational database stored directly as a cross-platform file inside the application directory. For a portable medical screening tool and PWA, SQLite provides full ACID transaction compliance, robust SQL query capability for patient histories, and zero external database connection overhead or hosting costs when deployed to ephemeral cloud containers.
-
-#### Q12: How do you prevent browser caching issues when a user uploads multiple foot scans with the same filename?
-**Answer:** In our upload handler (`/api/predict`), we sanitize input filenames and dynamically prepend a UNIX epoch timestamp (`unique_name = f"{int(time.time())}_{clean_name}"`). This guarantees that every processed scan, grayscale image, and threshold output receives a unique URL path, preventing web browsers from serving stale cached images from previous patient assessments.
+#### Q10: How does ONNX optimize the model graph?
+**Answer:** ONNX Runtime performs graph-level optimizations during session initialization. This includes:
+1. **Constant Folding**: Computes expressions containing constant nodes at compile time.
+2. **Operator Fusion**: Combines adjacent operations (e.g., `Conv + BatchNormalization + Activation` or `Reshape + Transpose`) into a single execution kernel.
+3. **Node Elimination**: Removes redundant nodes or unused subgraphs to speed up evaluation.
 
 ---
 
-### Section D: Full-Stack Web & PWA Integration
+### Section B: Image Processing & Computer Vision (Q11 - Q20)
 
-#### Q13: What is a Progressive Web App (PWA) and how does your project implement it?
-**Answer:** A PWA is a web application designed to deliver native-app user experiences (such as full-screen standalone execution, home screen icon installation, and offline caching) directly from a standard browser. Our application integrates a Web App Manifest (`manifest.json`) defining UI tokens and a Service Worker script (`sw.js`) that intercepts network requests to cache UI stylesheets, scripts, and iconography for instant client loading.
+#### Q11: How does `is_thermal_image` detect a valid thermogram?
+**Answer:** It checks the hue distribution of the image in the HSV color space. Clinical infrared thermal cameras map temperatures to specific false-color palettes like Ironbow or Jet. These palettes concentrate pixel hues heavily in:
+* **$0^{\circ}\text{ to }40^{\circ}$ (Red/Orange/Yellow)**: High-temperature regions.
+* **$140^{\circ}\text{ to }180^{\circ}$ (Magenta/Purple)**: Cool/ambient borders.
+If the proportion of pixels falling into these specific ranges is less than 30% of the total image area, or if the average saturation is low (suggesting grayscale or dull photographs), the image is rejected.
 
-#### Q14: How does your frontend generate clinical PDF reports without overloading the backend server?
-**Answer:** We utilize the client-side JavaScript library **`html2pdf.js`**. When a user requests a clinical report, the browser dynamically formats the current diagnostic dashboard (including original images, threshold overlays, patient profile details, and confidence scores) into an optimized printable HTML DOM container and converts it directly into a PDF vector file on the client CPU, requiring zero backend rendering overhead.
+#### Q12: Why convert to HSV instead of RGB for color filtering?
+**Answer:** In the RGB color space, color and brightness are coupled across all three channels (Red, Green, Blue). A shift in illumination affects all three values. HSV (Hue, Saturation, Value) decouples color information (**Hue**) from color intensity (**Saturation**) and brightness (**Value**). This allows us to target specific color ranges (thermal palettes) regardless of exposure or lighting variations.
 
-#### Q15: Explain your multi-mode authentication mechanism.
-**Answer:** Our backend endpoint `/api/auth/login` accepts a single identifier string along with a password. The SQL query evaluates the input across three distinct database columns simultaneously:
+#### Q13: What is Otsu's thresholding and why is it coupled with inverse binary thresholding?
+**Answer:**
+* **Otsu’s Thresholding (`cv2.THRESH_OTSU`)**: Calculates the optimal threshold value by maximizing inter-class variance between foreground and background pixels in a bimodal histogram. It avoids hardcoding arbitrary threshold limits.
+* **Inverse Binary Thresholding (`cv2.THRESH_BINARY_INV`)**: Converts pixels above the threshold to $0$ (black) and below the threshold to $255$ (white). In thermograms, hotspots correspond to high-intensity values. Inverse thresholding isolates these hyperthermic hotspots as crisp white regions on a black background, emphasizing focal lesions.
+
+#### Q14: Why resize images to exactly `64x64`?
+**Answer:** Standardizing the size to `64x64` yields several benefits:
+1. It handles input files from different cameras or resolutions uniformly.
+2. It reduces the input dimension to $64 \times 64 \times 3 = 12,288$ features, down from millions, preventing high parameter counts in the fully connected layer.
+3. It retains sufficient spatial resolution to detect structural plantar footprint shapes and thermal anomalies.
+
+#### Q15: How does the system handle rotation and distance changes in foot images?
+**Answer:** We addressed spatial invariance using training-time data augmentation. By introducing random rotations ($\pm 15^{\circ}$), random zooms ($\pm 20\%$), random shears, and horizontal flips, the CNN learns features that are invariant to the foot's angle, scale, or orientation in the frame.
+
+#### Q16: What is the role of OpenCV in this project?
+**Answer:** OpenCV handles backend computer vision tasks:
+* `cv2.imread()`: Loads images into NumPy arrays.
+* `cv2.cvtColor()`: Converts images between RGB, Grayscale, and HSV color spaces.
+* `cv2.threshold()`: Executes Otsu's thresholding for segmentation.
+* `cv2.imwrite()`: Saves preprocessed images (`gray_*.png`, `thresh_*.png`) to disk for frontend presentation.
+
+#### Q17: How do you address differences in resolution/aspect ratios of raw input images?
+**Answer:** Raw images are read via OpenCV as arrays, converted to Pillow (`PIL.Image`) objects, resized to $64 \times 64$ using bilinear interpolation, and converted back to a normalized float32 tensor. This ensures aspect ratio differences do not cause model crashes.
+
+#### Q18: What is image segmentation, and how is it achieved in this project?
+**Answer:** Image segmentation partitions an image into multiple segments (sets of pixels) to simplify its representation. In this project, thresholding segments the hot regions (plantar footprint) from the cold background. Using Otsu's method, we isolate the boundaries of the foot and highlight inflammatory areas.
+
+#### Q19: Explain the HSV threshold values (0-40 and 140-180) used in `is_thermal_image`.
+**Answer:**
+* **$0\text{ to }40$**: Represents red, orange, and yellow hues in HSV. These colors represent hyperthermic regions in thermal palettes.
+* **$140\text{ to }180$**: Represents magenta, purple, and violet hues. These colors represent cool/background zones in thermal palettes.
+Regular photos contain significant green ($40\text{ to }80$) and blue ($80\text{ to }140$) hues, which are absent in standard Ironbow thermograms.
+
+#### Q20: Could we use raw grayscale thermal images directly instead of false-colored thermal images?
+**Answer:** Yes, if raw radiometric/grayscale thermal data is available. However, clinical infrared attachments (like FLIR ONE) default to rendering false-color palettes. Our pipeline converts these color maps to grayscale internally to isolate intensity, making the system highly compatible with common clinical imaging formats.
+
+---
+
+### Section C: Backend Engineering & Cloud Architecture (Q21 - Q30)
+
+#### Q21: Why migrate from Keras/TensorFlow (`.h5`) to ONNX Runtime (`.onnx`)?
+**Answer:** TensorFlow is a bulky library ($>500\text{MB}$ install size) that allocates a large heap of memory at startup. When deployed on free-tier containers (512MB RAM), it causes Out-Of-Memory (OOM) crashes. **ONNX (Open Neural Network Exchange)** is designed solely for inference. It has a lightweight dependency footprint, reduces the server RAM usage from $480\text{MB}$ to less than $140\text{MB}$, and cuts latency to under $80\text{ms}$.
+
+#### Q22: Why choose FastAPI over Flask or Django?
+**Answer:**
+1. **Asynchronous Support**: FastAPI natively supports asynchronous requests (`async/await`) on ASGI servers, handling high-concurrency connections without blocking the thread pool.
+2. **Speed**: It is one of the fastest Python frameworks available, on par with NodeJS and Go, thanks to Starlette and Pydantic.
+3. **Automatic Docs**: It generates interactive Swagger UI API documentation automatically at `/docs`.
+
+#### Q23: Why choose embedded SQLite (`evaluation.db`) over MySQL/PostgreSQL?
+**Answer:** SQLite is an embedded database that requires zero configuration, zero network overhead, and stores all tables inside a single local file. This eliminates database hosting costs and latency for simple patient logging. If we scale, we can swap SQLite out for PostgreSQL with minimal modifications to our SQL syntax.
+
+#### Q24: How does the server prevent browser caching issues for repeated uploads?
+**Answer:** Browsers cache static assets (like images) to speed up loading. If a user uploads another image, the browser might show the cached old image. To prevent this, our backend prepends a UNIX timestamp to each uploaded file (`{timestamp}_{clean_name}`). In addition, our frontend appends a dynamic query parameter (`?v=timestamp`) to the image source URL, forcing the browser to fetch the new image.
+
+#### Q25: Explain the start command `gunicorn -w 1 -k uvicorn.workers.UvicornWorker server:app`.
+**Answer:**
+* **`gunicorn`**: A production-grade WSGI HTTP utility that manages worker processes.
+* **`-w 1`**: Sets the number of worker processes to 1. This prevents multiple workers from trying to load the ONNX model concurrently, saving memory on the free tier.
+* **`-k uvicorn.workers.UvicornWorker`**: Tells Gunicorn to use the async Uvicorn worker class to run the FastAPI ASGI app.
+* **`server:app`**: Points to the `app` instance in `server.py`.
+
+#### Q26: How does the backend handle concurrent API requests?
+**Answer:** FastAPI uses an asynchronous event loop (based on `asyncio`). When a request enters an async endpoint (like `/api/predict`), I/O operations (like file saving) are awaited, releasing the thread to handle other incoming requests in the queue, achieving high concurrency.
+
+#### Q27: How does `gc.collect()` prevent memory leaks in the FastAPI application?
+**Answer:** Python utilizes automatic garbage collection based on reference counting. However, in deep learning pipelines, temporary arrays and tensor variables can create circular references that linger in memory. Calling `gc.collect()` explicitly triggers immediate garbage collection, releasing unused memory blocks back to the OS.
+
+#### Q28: How are uploads structured and stored on the server?
+**Answer:** Uploads are stored in `static/uploads/`. When `/api/predict` is called, the original file, the generated grayscale image (`gray_*.png`), and the threshold image (`thresh_*.png`) are saved in this directory. They are served as static files via FastAPI's `StaticFiles` mounting.
+
+#### Q29: What is Cross-Origin Resource Sharing (CORS), and why did you configure it?
+**Answer:** CORS is a security mechanism implemented by web browsers to restrict web pages from making requests to a domain different from the one that served the web page. We configured `CORSMiddleware` in FastAPI with `allow_origins=["*"]` to allow local development clients and web interfaces to communicate with our API server.
+
+#### Q30: How is database migration handled when columns like `time` are added later?
+**Answer:** In `server.py`, our database initialization script uses an `ALTER TABLE` statement wrapped in a `try-except` block:
+```python
+try:
+    cursor.execute("ALTER TABLE analysis_history ADD COLUMN time TEXT")
+except:
+    pass
+```
+If the column `time` does not exist, it is added. If it already exists, the database engine throws an error which is caught and ignored, keeping database schema initialization safe and backward-compatible.
+
+---
+
+### Section D: Full-Stack Web & PWA Integration (Q31 - Q38)
+
+#### Q31: What is a Progressive Web App (PWA) and how does your project implement it?
+**Answer:** A PWA is a web application that provides native app-like features:
+* **Manifest (`manifest.json`)**: Configures display parameters (standalone mode, portrait locking, theme colors) and application icons for homescreen installs.
+* **Service Worker (`sw.js`)**: A background script that intercepts network requests, caches static assets, and serves them from the cache when offline.
+
+#### Q32: How is client-side PDF generation implemented using `html2pdf.js`?
+**Answer:** `html2pdf.js` captures the target HTML DOM element, renders it into a canvas using `html2canvas`, and then compiles that canvas into a PDF file using `jsPDF`. All rendering occurs on the client side, avoiding any load on the backend server.
+
+#### Q33: How does the multi-mode authentication mechanism work?
+**Answer:** When logging in, the user provides an identifier (which can be their Username, Email, or Phone Number). The backend executes a SQL query that checks the identifier against all three fields in the database:
 ```sql
 SELECT * FROM registration 
 WHERE (username = ? OR Email = ? OR Phoneno = ?) AND password = ?
 ```
-This enables seamless patient access regardless of whether they prefer signing in via username, registered email, or mobile phone number.
+If a match is found, the user is authenticated.
+
+#### Q34: What is the purpose of the stepper workflow in the UI?
+**Answer:** The stepper workflow guides the user through the diagnostic screening process step-by-step:
+1. **Upload**: Select and drop the thermogram image.
+2. **Analysis**: Visual preview of the original, grayscale, and thresholded image.
+3. **Results**: View prediction (At Risk / Safe), confidence score, and save or export the report.
+This reduces cognitive load and ensures a clear flow.
+
+#### Q35: How does the frontend handle server-side errors, like a 502/504 Render gateway timeout?
+**Answer:** In `static/main.js`, our fetch request is wrapped in a `try-catch` block. We inspect the response status code. If it is `502` or `504` (typical when Render instances run out of memory or wake up slowly), we catch the error and present a helpful clinical message explaining that the server is restarting due to memory limits, rather than letting the app fail silently.
+
+#### Q36: How is local state managed on the client side?
+**Answer:** We use the browser's `localStorage` to persist state across sessions:
+* `localStorage.setItem('diabetes_user', ...)` stores the logged-in user profile.
+* `localStorage.setItem('diabetes_view', ...)` stores the active dashboard view.
+This ensures that refreshing the browser does not log the user out or lose their dashboard navigation state.
+
+#### Q37: How does Chart.js visualize the patient's diagnostic history?
+**Answer:** When the patient history is fetched, we pass the data points to Chart.js. We map the prediction status (Safe as 1, Risk as 0) on the Y-axis and the dates on the X-axis, rendering a line chart with customizable line tensions and fill areas to depict the trend over time.
+
+#### Q38: What is the role of `sw.js` (Service Worker) in caching?
+**Answer:** During the service worker install event, it pre-caches core assets: `/`, `/style.css`, `/main.js`, `/manifest.json`, and `/icon.png`. For subsequent requests, it intercepts them and returns the cached version first, enabling the application shell to load instantly, even when offline.
 
 ---
 
-### Section E: Clinical & System Validation
+### Section E: Clinical & System Validation & Future Scope (Q39 - Q45)
 
-#### Q16: Can normal regular foot photographs (non-thermal) be used with your AI system?
-**Answer:** No. Standard RGB photographs only capture visible surface wavelengths (reflected light) and skin pigmentation, which cannot reveal subcutaneous vascular inflammation or pre-ulcerative temperature gradients. Infrared thermography captures emitted thermal radiation (heat). Our model and heuristic filter specifically require thermal color palettes to assess neuropathy risk accurately.
+#### Q39: Can normal regular foot photographs be used with your AI system?
+**Answer:** No. Regular photographs capture reflected light in the visible spectrum. They do not capture thermal radiation or skin temperature distributions. Subcutaneous inflammation associated with diabetic neuropathy or poor vascular flow only shows up as temperature differentials, which requires infrared thermal sensors.
 
-#### Q17: What steps did you take to ensure the application runs stably under prolonged operation without memory leaks?
-**Answer:** In Python API request handling, processing large image arrays can leave residual references in memory. We explicitly invoke Python's garbage collector (`gc.collect()`) immediately before image allocation and immediately following ONNX prediction execution in `server.py`, ensuring temporary tensor buffers are reclaimed instantly.
+#### Q40: What are the HIPAA / GDPR implications of storing patient scans and history?
+**Answer:** Storing patient health records (PHI) requires compliance with regulations like HIPAA (USA) or GDPR (Europe):
+* Patients must consent to data collection.
+* Data must be encrypted at rest and in transit.
+* Access logs must be kept, and users must have the right to request deletion of their records (which our `/api/analysis/delete/{id}` endpoint facilitates).
 
-#### Q18: How would you scale this application to support millions of hospital patients globally?
-**Answer:** We would horizontally scale the FastAPI container across a **Kubernetes (K8s)** cluster behind an AWS Application Load Balancer or Cloudflare CDN. Storage would be migrated from embedded SQLite to an AWS Aurora PostgreSQL cluster with S3 object storage for raw foot scans, and inference would be distributed across dedicated edge AI inference nodes.
+#### Q41: What is a Clinical Decision Support System (CDSS) and does this app replace doctors?
+**Answer:** A CDSS is an interactive software system designed to assist healthcare professionals in decision-making tasks. This app does not replace a doctor. It acts as an early-stage screening tool to flag high-risk cases for further clinical evaluation, reducing the burden on clinics.
 
-#### Q19: What are the ethical and regulatory considerations of deploying AI in medical diagnosis?
-**Answer:** AI screening platforms must adhere to strict regulatory frameworks such as **HIPAA** (USA) or **GDPR** (Europe) regarding patient data anonymization and encryption. Furthermore, our platform is classified as a **Clinical Decision Support System (CDSS)**—it is explicitly designed to assist podiatrists and medical officers in early risk triage, not to autonomously replace formal podiatric surgical diagnosis.
+#### Q42: How would you scale this application to support millions of users globally?
+**Answer:** To scale:
+1. Migrate the database from SQLite to a distributed SQL cluster like CockroachDB or PostgreSQL.
+2. Deploy the FastAPI app in docker containers on a Kubernetes cluster with an auto-scaler.
+3. Move uploaded images from local disks to a secure cloud bucket like AWS S3.
+4. Distribute the ONNX model inference to GPU-enabled microservices or edge devices.
 
-#### Q20: Summarize your personal technical contribution to this project.
-**Answer:** As Project Lead, I spearheaded the architectural transformation of the system from a legacy desktop script into a cloud-native Progressive Web App. My primary engineering contributions included designing the FastAPI backend, implementing the HSV color space image validation filter, resolving cloud memory crashes by executing the ONNX model migration, and designing the responsive glassmorphic UI featuring automated PDF report generation.
+#### Q43: How do you handle false negatives and false positives in clinical validation?
+**Answer:**
+* **False Negatives** (model predicting safe for an at-risk patient) are dangerous. We minimized this by optimizing for **Recall** ($94.6\%$).
+* **False Positives** (model predicting risk for a safe patient) are handled by routing patients to secondary testing (Doppler ultrasound or visual checkup).
+
+#### Q44: What is Explainable AI (XAI) and how can it be added to the future scope?
+**Answer:** XAI aims to make the decisions of ML models transparent. In future iterations, we can implement **Grad-CAM (Gradient-weighted Class Activation Mapping)**. Grad-CAM uses the gradients of the last convolutional layer to generate a heatmap indicating which regions of the foot (e.g., heel or metatarsal) the CNN focused on to make its prediction.
+
+#### Q45: Summarize your personal technical contribution as the Project Lead.
+**Answer:** As Project Lead, I spearheaded the transition from a local desktop script to a cloud-ready Progressive Web App. My key contributions include:
+1. Establishing the FastAPI async web service and database schema.
+2. Writing the HSV-based image validation filter.
+3. Migrating the CNN from TensorFlow to ONNX Runtime, reducing memory by $>70\%$.
+4. Designing the responsive dashboard and client-side PDF export workflow.
 
 ---
 
